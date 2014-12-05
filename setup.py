@@ -11,9 +11,9 @@
 # FOR A PARTICULAR PURPOSE.
 #
 ##############################################################################
-name, version = 'zc.', '0'
+name, version = 'zc.cima', '0'
 
-install_requires = ['setuptools']
+install_requires = ['setuptools', 'gevent']
 extras_require = dict(test=['manuel', 'mock', 'zope.testing'])
 
 entry_points = """
