@@ -1,0 +1,29 @@
+# Used in tests agent.rst
+import os, sys, time
+
+[name] = sys.argv[1:]
+if os.path.isfile(name):
+  status = 0
+  with open(name) as f:
+    data = f.read()
+  if len(data) == 0:
+    print '%r exists, but is empty' % name
+    sys.exit(1)
+  if data == 'noout':
+    sys.exit(0)
+  if data[0] == '{':
+    print data
+    sys.exit(0)
+
+  status = 0
+  if data == 'stderr':
+    sys.stderr.write('what hapenned?')
+  elif data == 'status':
+    status = 42
+  elif data == 'sleep':
+    time.sleep(2)
+  print '%r exists' % name
+  sys.exit(status)
+
+print "%r doesn't exist" % name
+sys.exit(2)
