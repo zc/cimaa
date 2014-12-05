@@ -18,6 +18,7 @@ import manuel.capture
 import manuel.doctest
 import manuel.testing
 import mock
+import os
 import pprint
 import re
 import time
@@ -89,40 +90,12 @@ class OutputAlerter(Logging):
     def resolve(self, name):
         self.log('resolve', name)
 
-filecheck_py = """
-import os, sys, time
-
-[name] = sys.argv[1:]
-if os.path.isfile(name):
-  status = 0
-  with open(name) as f:
-     data = f.read()
-  if len(data) == 0:
-     print '%r exists, but is empty' % name
-     sys.exit(1)
-  if data == 'noout':
-     sys.exit(0)
-  if data[0] == '{':
-     print data
-     sys.exit(0)
-
-  status = 0
-  if data == 'stderr':
-     sys.stderr.write('what hapenned?')
-  elif data == 'status':
-     status = 42
-  elif data == 'sleep':
-     time.sleep(2)
-  print '%r exists' % name
-  sys.exit(status)
-print "%r doesn't exist" % name
-sys.exit(2)
-""" # ' sigh
 
 def setUp(test):
     setupstack.setUpDirectory(test)
-    with open('filecheck.py', 'w') as f:
-        f.write(filecheck_py)
+    with open(os.path.join(os.path.dirname(__file__), 'filecheck_py')) as src:
+        with open('filecheck.py', 'w') as dest:
+            dest.write(src.read())
 
     setupstack.context_manager(
         test, mock.patch('socket.getfqdn', return_value='test.example.com'))
