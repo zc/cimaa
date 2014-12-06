@@ -17,6 +17,8 @@ install_requires = ['setuptools', 'gevent']
 extras_require = dict(test=['manuel', 'mock', 'zope.testing'])
 
 entry_points = """
+[console_scripts]
+agent = zc.cima.agent:main
 """
 
 from setuptools import setup

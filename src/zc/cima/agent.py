@@ -1,4 +1,4 @@
-
+import argparse
 import ConfigParser
 import gevent.subprocess
 import json
@@ -6,6 +6,7 @@ import logging
 import os
 import re
 import socket
+import sys
 import time
 
 logger = logging.getLogger(__name__)
@@ -20,12 +21,18 @@ class Agent:
         parser.read(config)
         options = dict(parser.items('agent'))
         aname = self.name = options.get('name', socket.getfqdn())
-        self.timeout = float(options.get('timeout', 40))
+        self.base_interval = float(options.get('base_interval', 60.0))
+        self.timeout = float(options.get('timeout', self.base_interval * .7))
 
         db = self.db = load_handler(parser, 'database')
         db.heartbeat(aname, 'start')
 
         alerter = self.alerter = load_handler(parser, 'alerter')
+
+        self.critical = dict((f['name'], f['message'])
+                             for f in self.db.get_faults(self.name) or ()
+                             if f['severity'] >= logging.CRITICAL
+                             )
 
         directory = options['directory']
         self.checks = checks = []
@@ -45,8 +52,7 @@ class Agent:
                     checks.append(Check(section, command,
                                         interval, retry, retry_interval))
 
-    critical = {}
-    def perform(self):
+    def perform(self, minute):
         # start checks. XXX maybe we want to limit the number of checks
         # running at once.
         self.heartbeat('performing')
@@ -55,7 +61,12 @@ class Agent:
 
         deadline = time.time() + self.timeout
         faults = []
+        checked = set()
+        squelches = None
         for check, checklet in checklets:
+            if not check.should_run(minute):
+                continue
+            checked.add(check.name)
             timeout = max(0, deadline - time.time())
             checklet.join(timeout)
             self.heartbeat('checking '+check.name)
@@ -65,6 +76,8 @@ class Agent:
                 faults.append(monitor_error(
                     'timeout', prefix=check.name+'#',
                     severity=logging.CRITICAL))
+                if squelches is None:
+                    squelches = self.db.get_squelches()
             else:
                 for f in cresults.get('faults', ()):
                     if f.get('name', ''):
@@ -72,16 +85,15 @@ class Agent:
                     else:
                         f['name'] = check.name
                     faults.append(f)
+                    if f['severity'] >= logging.CRITICAL and squelches is None:
+                        squelches = self.db.get_squelches()
 
         self.db.set_faults(self.name, faults)
 
         critical = {}
-        squelches = None
         for f in faults:
             if f['severity'] < logging.CRITICAL:
                 continue
-            if squelches is None:
-                squelches = self.db.get_squelches()
             for squelch in squelches:
                 if re.search(squelch, f['name']):
                     break
@@ -95,7 +107,7 @@ class Agent:
                 if self.critical.get(name, None) != message:
                     self.alerter.trigger(name, message)
             for name in self.critical:
-                if name not in critical:
+                if name not in critical and name.split('#')[0] in checked:
                     self.alerter.resolve(name)
             self.critical = critical
             self.db.alert_finished(self.name)
@@ -104,6 +116,20 @@ class Agent:
 
     def heartbeat(self, label):
         self.db.heartbeat(self.name, label)
+
+    def loop(self, count = -1):
+        base_interval = self.base_interval
+        last = time.time()
+        while count:
+            now = time.time()
+            if now - last > base_interval:
+                self.slow = True
+            last = now
+            tick = now / base_interval
+            itick = int(tick)
+            gevent.sleep(base_interval * (1 - (tick - itick)))
+            self.perform(itick + 1)
+            count -= 1
 
 class Check:
 
@@ -117,6 +143,19 @@ class Check:
         self.retry = retry
         self.chances = retry + 1
         self.retry_interval = retry_interval
+
+    def should_run(self, minute):
+        interval = self.interval
+        if self.failures:
+            retry_interval = self.retry_interval
+            if retry_interval == 1:
+                return True
+            minutes_failed = (self.failures - 1) * retry_interval
+            minute_failed = (minute - minutes_failed - 1) / interval * interval
+            last_fail = minute_failed + minutes_failed
+            return minute - last_fail >= retry_interval
+
+        return minute % interval == 0
 
     def perform(self):
         try:
@@ -194,7 +233,9 @@ class Check:
                 severity = logging.CRITICAL,
                 )])
 
-severity_names = dict(warning=30, error=40, critical=50)
+severity_names = dict(warning=logging.WARNING,
+                      error=logging.ERROR,
+                      critical=logging.CRITICAL)
 
 def monitor_error(name, message='', prefix='', severity=logging.ERROR):
     return dict(name=prefix+'monitor-'+name, message=message, severity=severity)
@@ -204,3 +245,15 @@ def load_handler(parser, name):
     mod, name = config['class'].split(':')
     mod = __import__(mod, {}, {}, [name])
     return getattr(mod, name)(config)
+
+def main(args=None):
+    if args is None:
+        args = sys.argv[1:]
+    parser = argparse.ArgumentParser(description='Run monitoring agent.')
+    parser.add_argument('configuration',
+                        help='agent configuration file')
+    parser.add_argument('-n', '--count', type=int,
+                        help='number of tests to perform (default unlimited)')
+
+    args = parser.parse_args(args)
+    Agent(args.configuration).loop(args.count or -1)

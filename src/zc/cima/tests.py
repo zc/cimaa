@@ -13,7 +13,7 @@
 ##############################################################################
 from zope.testing import renormalizing, setupstack
 import doctest
-import unittest
+import json
 import manuel.capture
 import manuel.doctest
 import manuel.testing
@@ -22,7 +22,7 @@ import os
 import pprint
 import re
 import time
-
+import unittest
 
 class Logging:
 
@@ -37,7 +37,7 @@ class MemoryDB:
     def __init__(self, config):
         self.agents = {}
         self.alerts = {}
-        self.faults = {}
+        self.faults = json.loads(config.get('faults', '{}'))
         self.squelches = []
 
     def heartbeat(self, agent, status):
@@ -67,7 +67,7 @@ class MemoryDB:
                 yield name
 
     def get_faults(self, agent):
-        return self.faults[agent]
+        return self.faults.get(agent)
 
     def set_faults(self, agent, faults):
         self.faults[agent] = faults
@@ -109,7 +109,7 @@ def test_suite():
                     (re.compile(r"'updated': \d+(\.\d*)?"), '')
                     ])
                 ) + manuel.capture.Manuel(),
-            'agent.rst',
+            'agent.rst', 'schedule.rst',
             setUp = setUp, tearDown=setupstack.tearDown),
         ))
 
