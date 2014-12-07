@@ -38,7 +38,7 @@ class MemoryDB:
         self.agents = {}
         self.alerts = {}
         self.faults = json.loads(config.get('faults', '{}'))
-        self.squelches = []
+        self.squelches = {}
 
     def heartbeat(self, agent, status):
         self.agents[agent] = dict(
@@ -75,6 +75,16 @@ class MemoryDB:
     def get_squelches(self):
         return list(self.squelches)
 
+    def squelch(self, regex, reason, user):
+        self.squelches[regex] = dict(
+            reason = reason,
+            user = user,
+            time = 1417968068.01
+            )
+
+    def unsquelch(self, regex):
+        del self.squelches[regex]
+
     def __str__(self):
         return pprint.pformat(dict(
             agents=self.agents, alerts=self.alerts, faults=self.faults))
@@ -93,6 +103,9 @@ class OutputAlerter(Logging):
 
 def setUp(test):
     setupstack.setUpDirectory(test)
+    test.globs.update(
+        pprint = pprint.pprint,
+        )
     with open(os.path.join(os.path.dirname(__file__), 'filecheck_py')) as src:
         with open('filecheck.py', 'w') as dest:
             dest.write(src.read())

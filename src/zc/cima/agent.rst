@@ -212,9 +212,14 @@ Squelch
 =======
 
 We can squelch alerts using regular expressions stored in the
-database. This is done via a separate application.
+database.  You must provide a reason for the squelch, as well as an
+indication of who created it.  Squelches are set by external
+applications. They record the time at which the squelch was set:
 
-    >>> agent.db.squelches.append('test')
+    >>> agent.db.squelch('test', 'testing', 'me')
+    >>> pprint(agent.db.squelches)
+    {'test': {'reason': 'testing', 'time': 1417968068.01, 'user': 'me'}}
+
     >>> agent.perform(0)
     >>> agent.perform(0)
     >>> print agent.db
@@ -228,7 +233,7 @@ Here, we didn't get an alert, even though we has a critical fault.
 
 We'll unsquelch:
 
-    >>> del agent.db.squelches[:]
+    >>> agent.db.unsquelch('test')
     >>> agent.perform(0)
     OutputAlerter trigger //test.example.com/test/foo.txt#monitor-status
     'foo.txt' exists
