@@ -25,7 +25,6 @@ class Agent:
         self.timeout = float(options.get('timeout', self.base_interval * .7))
 
         db = self.db = load_handler(parser, 'database')
-        db.heartbeat(aname, 'start')
 
         alerter = self.alerter = load_handler(parser, 'alerter')
 
@@ -55,7 +54,6 @@ class Agent:
     def perform(self, minute):
         # start checks. XXX maybe we want to limit the number of checks
         # running at once.
-        self.heartbeat('performing')
         checklets = [(check, gevent.spawn(check.perform))
                      for check in self.checks]
 
@@ -69,7 +67,6 @@ class Agent:
             checked.add(check.name)
             timeout = max(0, deadline - time.time())
             checklet.join(timeout)
-            self.heartbeat('checking '+check.name)
             cresults = checklet.value
             if cresults is None:
                 checklet.kill(block=False)
@@ -101,8 +98,6 @@ class Agent:
                 critical[f['name']] = f['message']
 
         if critical != self.critical:
-            self.heartbeat('triggering')
-            self.db.alert_start(self.name)
             for name, message in critical.items():
                 if self.critical.get(name, None) != message:
                     self.alerter.trigger(name, message)
@@ -110,12 +105,6 @@ class Agent:
                 if name not in critical and name.split('#')[0] in checked:
                     self.alerter.resolve(name)
             self.critical = critical
-            self.db.alert_finished(self.name)
-
-        self.heartbeat('performed')
-
-    def heartbeat(self, label):
-        self.db.heartbeat(self.name, label)
 
     def loop(self, count = -1):
         base_interval = self.base_interval

@@ -106,10 +106,7 @@ The file we were checking for wasn't there, but we didn't get an
 alert. Let's look at our database:
 
     >>> print agent.db
-    {'agents': {'test.example.com': {'agent': 'test.example.com',
-                                     'status': 'performed',
-                                     'updated': 1417804927.88}},
-     'alerts': {},
+    {'agents': {'test.example.com': 1417804927.88},
      'faults': {'test.example.com': [{'message':
                                       "'foo.txt' doesn't exist\n (1 of 4)",
                                       'name': '//test.example.com/test/foo.txt',
@@ -148,7 +145,6 @@ If we look at the database, we'll see we still have a warning:
 
     >>> print agent.db
     {'agents': ...
-     'alerts': {},
      'faults': {'test.example.com': [{'message':
                                       "'foo.txt' exists, but is empty\n",
                                       'name': '//test.example.com/test/foo.txt',
@@ -161,7 +157,6 @@ Let's fix it:
     >>> agent.perform(0)
     >>> print agent.db
     {'agents': ...
-     'alerts': {},
      'faults': {'test.example.com': []}}
 
 Dealing with misbehaving checks
@@ -176,7 +171,6 @@ Nagios plugin wrote to stderr:
     >>> agent.perform(0)
     >>> print agent.db
     {'agents': ...
-     'alerts': {},
      'faults': {'test.example.com': [{'message': 'what hapenned? (1 of 4)',
                                       'name':
                               '//test.example.com/test/foo.txt#monitor-stderr',
@@ -188,10 +182,7 @@ Nagios plugin didn't write to stdout:
     ...     f.write('noout')
     >>> agent.perform(0)
     >>> print agent.db
-    {'agents': {'test.example.com': {'agent': 'test.example.com',
-                                     'status': 'performed',
-                                     'updated': 1417804971.88}},
-     'alerts': {},
+    {'agents': ...
      'faults': {'test.example.com': [{'message': ' (2 of 4)',
                       'name': '//test.example.com/test/foo.txt#monitor-no-out',
                                       'severity': 40}]}}
@@ -203,7 +194,6 @@ Nagios plugin returned a unknown status code:
     >>> agent.perform(0)
     >>> print agent.db
     {'agents': ...
-     'alerts': {},
      'faults': {'test.example.com': [{'message': "'foo.txt' exists\n (3 of 4)",
                       'name': '//test.example.com/test/foo.txt#monitor-status',
                                       'severity': 40}]}}
@@ -224,8 +214,7 @@ applications. They record the time at which the squelch was set:
     >>> agent.perform(0)
     >>> print agent.db
     {'agents': ...
-     'alerts': {},
-     'faults': {'test.example.com': [{'message': "'foo.txt' exists\n",
+          'faults': {'test.example.com': [{'message': "'foo.txt' exists\n",
                       'name': '//test.example.com/test/foo.txt#monitor-status',
                                       'severity': 50}]}}
 
@@ -250,7 +239,6 @@ checker will return file contents of they're JSON:
     OutputAlerter resolve //test.example.com/test/foo.txt#monitor-status
     >>> print agent.db
     {'agents': ...
-     'alerts': {},
      'faults': {'test.example.com': []}}
 
 We generate a fault of json is malformed or lacks a faults property:
@@ -310,7 +298,6 @@ does, then we'll alert immediately.  We don't retry:
 
     >>> print agent.db
     {'agents': ...
-     'alerts': {},
      'faults': {'test.example.com': [{u'message': u'Panic!',
                                       'name': '//test.example.com/test/foo.txt',
                                       u'severity': 50}]}}
@@ -324,8 +311,7 @@ does, then we'll alert immediately.  We don't retry:
 
     >>> print agent.db
     {'agents': ...
-     'alerts': {},
-     'faults': {'test.example.com': [{u'message': u'Panic!',
+          'faults': {'test.example.com': [{u'message': u'Panic!',
                                 u'name': u'//test.example.com/test/foo.txt#OMG',
                                       u'severity': 99}]}}
 
@@ -341,7 +327,6 @@ for severities:
     OutputAlerter resolve //test.example.com/test/foo.txt#OMG
     >>> print agent.db
     {'agents': ...
-     'alerts': {},
      'faults': {'test.example.com': [{u'message': u'Worry',
                                       'name': '//test.example.com/test/foo.txt',
                                       u'severity': 30}]}}
@@ -351,18 +336,16 @@ for severities:
     >>> agent.perform(0)
     >>> print agent.db
     {'agents': ...
-     'alerts': {},
      'faults': {'test.example.com': [{u'message': u'Bad (1 of 4)',
                                       'name': '//test.example.com/test/foo.txt',
                                       u'severity': 40}]}}
 
     >>> with open('foo.txt', 'w') as f:
-    ...     f.write('{"faults": [{"message": "Panic!", "severity": "critical"}]}')
+    ...   f.write('{"faults": [{"message": "Panic!", "severity": "critical"}]}')
     >>> agent.perform(0)
     OutputAlerter trigger //test.example.com/test/foo.txt Panic!
     >>> print agent.db
     {'agents': ...
-     'alerts': {},
      'faults': {'test.example.com': [{u'message': u'Panic!',
                                       'name': '//test.example.com/test/foo.txt',
                                       u'severity': 50}]}}
