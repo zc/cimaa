@@ -59,6 +59,7 @@ class Agent:
 
         deadline = time.time() + self.timeout
         faults = []
+        critical = {}
         checked = set()
         squelches = None
         for check, checklet in checklets:
@@ -70,37 +71,31 @@ class Agent:
             cresults = checklet.value
             if cresults is None:
                 checklet.kill(block=False)
-                faults.append(monitor_error(
-                    'timeout', prefix=check.name+'#',
-                    severity=logging.CRITICAL))
-                if squelches is None:
-                    squelches = self.db.get_squelches()
-            else:
-                for f in cresults.get('faults', ()):
-                    if f.get('name', ''):
-                        f['name'] = check.name + '#' + f['name']
-                    else:
-                        f['name'] = check.name
-                    faults.append(f)
-                    if f['severity'] >= logging.CRITICAL and squelches is None:
+                cresults = dict(faults=[
+                    monitor_error('timeout', severity=logging.CRITICAL)
+                    ])
+            for f in cresults.get('faults', ()):
+                if f.get('name', ''):
+                    name = check.name + '#' + f['name']
+                else:
+                    name = check.name
+                f['name'] = name
+                faults.append(f)
+                if f['severity'] >= logging.CRITICAL:
+                    if squelches is None:
                         squelches = self.db.get_squelches()
+                    for squelch in squelches:
+                        if re.search(squelch, name):
+                            break
+                    else:
+                        message = f['message']
+                        critical[name] = message
+                        if self.critical.get(name) != message:
+                            self.alerter.trigger(name, message)
 
         self.db.set_faults(self.name, faults)
 
-        critical = {}
-        for f in faults:
-            if f['severity'] < logging.CRITICAL:
-                continue
-            for squelch in squelches:
-                if re.search(squelch, f['name']):
-                    break
-            else:
-                critical[f['name']] = f['message']
-
         if critical != self.critical:
-            for name, message in critical.items():
-                if self.critical.get(name, None) != message:
-                    self.alerter.trigger(name, message)
             for name in self.critical:
                 if name not in critical and name.split('#')[0] in checked:
                     self.alerter.resolve(name)
