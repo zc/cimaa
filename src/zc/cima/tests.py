@@ -97,8 +97,9 @@ def test_suite():
                      "'agents': {'test.example.com': ")
                     ])
                 ) + manuel.capture.Manuel(),
-            'agent.rst', 'schedule.rst',
-            setUp = setUp, tearDown=setupstack.tearDown),
+            'agent.rst',
+            'schedule.rst',
+            setUp=setUp, tearDown=setupstack.tearDown),
         ))
     if 'DYNAMO_TEST' in os.environ:
         suite.addTest(

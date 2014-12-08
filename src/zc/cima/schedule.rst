@@ -1,15 +1,15 @@
 Agent scheduling
 ================
 
-The agent scedules based on a base time interval, typically a minute.
+The agent schedules based on a base time interval, typically a minute.
 It endeavors to start tunning tests on time_interval boundaries.  All
 other scheduling is done in terms of the base interval.  Further, when
 tests have intervals larger than one, then the agent schedules them so
 that they fall on even intervals, relative to the epoch. For example,
-a test with an interval of 5, will run approximately evert 5 minutes
+a test with an interval of 5, will run approximately every 5 minutes
 on the hour.
 
-There are a number of pices that make up this:
+There are a number of pieces that make up this:
 
 - Check-specific scheduling rules
 
@@ -23,7 +23,7 @@ We'll look at each of these in turn.
 Check rules
 ===========
 
-The agend calls ``should_run`` on a check, passing in the current
+The agent calls ``should_run`` on a check, passing in the current
 interval number.  We'll look at this with a particular check:
 
     >>> import zc.cima.agent
@@ -142,7 +142,7 @@ If the retry interval is 1, then we always should run if there are failures.
 loop
 ====
 
-Agents have a loop method that compute integer interval number and
+Agents have a loop method that computes an integer interval number and
 calls perform.  To support testing, you can optionally supply a
 numnber of times to run.
 
@@ -163,8 +163,8 @@ Let's set up an agent::
    >>> with open('agent.cfg', 'w') as f:
    ...     f.write(src)
 
-Note that we set a base interval of .1 seconds (for testing). The default is 60.
-You can use this option for speeding up checks if you need to.
+Note that we set a base interval of .1 seconds (for testing).  The default
+is 60.  You can use this option for speeding up checks if you need to.
 
 Let's configure a basic check::
 

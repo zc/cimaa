@@ -92,7 +92,7 @@ calls it's ``loop`` method, which calls ``perform`` in a loop, but for
 now, we'll call ``perform`` method ourselves.
 
 The perform method takes an argument that's a sort of a counter used
-for scheduling.  The value is the an interval number, normally sunce
+for scheduling.  The value is an interval number, normally since
 the epoch.  It uses this to decide whether a particular check should
 be performed, based on the check's interval, retry count and retry
 policy.
@@ -353,7 +353,7 @@ for severities:
 Loading state on startup
 ========================
 
-On startup, the agend loads faults so it can resolve faults that have
+On startup, the agent loads faults so it can resolve faults that have
 cleared and avoid re-alerting on ones that haven't.  Out test database
 implementation allows us to specify initial faults to test this::
 
