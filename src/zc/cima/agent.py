@@ -24,7 +24,7 @@ class Agent:
         self.base_interval = float(options.get('base_interval', 60.0))
         self.timeout = float(options.get('timeout', self.base_interval * .7))
 
-        db = self.db = load_handler(parser, 'database')
+        self.db = load_handler(parser, 'database')
 
         alerter = self.alerter = load_handler(parser, 'alerter')
 
