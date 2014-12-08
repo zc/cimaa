@@ -122,7 +122,7 @@ def test_suite():
                     (re.compile(r"'updated': \d+(\.\d*)?"), '')
                     ])
                 ) + manuel.capture.Manuel(),
-            'agent.rst', 'schedule.rst',
-            setUp = setUp, tearDown=setupstack.tearDown),
+            'agent.rst',
+            'schedule.rst',
+            setUp=setUp, tearDown=setupstack.tearDown),
         ))
-
