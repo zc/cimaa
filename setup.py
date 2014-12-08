@@ -16,7 +16,7 @@ name, version = 'zc.cima', '0'
 install_requires = ['setuptools', 'gevent']
 extras_require = dict(
     test=['manuel', 'mock', 'zope.testing'],
-    dynamodb=['boto'],
+    dynamodb=['boto', 'keyring'],
     )
 
 entry_points = """

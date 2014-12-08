@@ -39,12 +39,6 @@ class MemoryDB:
         self.faults = json.loads(config.get('faults', '{}'))
         self.squelches = {}
 
-    def old_agents(self, min_age):
-        max_updated = time.time() - min_age
-        for name, updated in self.agents.items():
-            if updated < max_updated:
-                yield name, updated
-
     def get_faults(self, agent):
         return self.faults.get(agent)
 
@@ -94,7 +88,7 @@ def setUp(test):
         test, mock.patch('socket.getfqdn', return_value='test.example.com'))
 
 def test_suite():
-    return unittest.TestSuite((
+    suite = unittest.TestSuite((
         manuel.testing.TestSuite(
             manuel.doctest.Manuel(
                 optionflags=doctest.NORMALIZE_WHITESPACE|doctest.ELLIPSIS,
@@ -106,4 +100,16 @@ def test_suite():
             'agent.rst', 'schedule.rst',
             setUp = setUp, tearDown=setupstack.tearDown),
         ))
-
+    if 'DYNAMO_TEST' in os.environ:
+        suite.addTest(
+            manuel.testing.TestSuite(
+                manuel.doctest.Manuel(
+                    optionflags=doctest.NORMALIZE_WHITESPACE|doctest.ELLIPSIS,
+                    checker=renormalizing.OutputChecker([
+                        (re.compile(r"Decimal\('\d+(\.\d*)?'\)"), "")
+                        ])
+                    ) + manuel.capture.Manuel(),
+                'dynamodb.rst',
+                setUp = setUp, tearDown=setupstack.tearDown),
+            )
+    return suite
