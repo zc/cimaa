@@ -36,41 +36,21 @@ class MemoryDB:
 
     def __init__(self, config):
         self.agents = {}
-        self.alerts = {}
         self.faults = json.loads(config.get('faults', '{}'))
         self.squelches = {}
 
-    def heartbeat(self, agent, status):
-        self.agents[agent] = dict(
-            agent=agent,
-            updated=time.time(),
-            status=status)
-
     def old_agents(self, min_age):
-        now = time.time()
-        for data in agents.values():
-            agent_age = now - data['updated']
-            if agent_age > min_age:
-                yield data.copy()
-
-    def alert_start(self, name):
-        self.alerts[name] = time.time()
-
-    def alert_finished(self, name):
-        self.alerts.pop(name, None)
-
-    def old_alerts(self, min_age):
-        now = time.time()
-        for name, start in alerts.items():
-            age = now - start
-            if age > min_age:
-                yield name
+        max_updated = time.time() - min_age
+        for name, updated in self.agents.items():
+            if updated < max_updated:
+                yield name, updated
 
     def get_faults(self, agent):
         return self.faults.get(agent)
 
     def set_faults(self, agent, faults):
         self.faults[agent] = faults
+        self.agents[agent] = time.time()
 
     def get_squelches(self):
         return list(self.squelches)
@@ -87,7 +67,7 @@ class MemoryDB:
 
     def __str__(self):
         return pprint.pformat(dict(
-            agents=self.agents, alerts=self.alerts, faults=self.faults))
+            agents=self.agents, faults=self.faults))
 
 class OutputAlerter(Logging):
 
@@ -119,7 +99,8 @@ def test_suite():
             manuel.doctest.Manuel(
                 optionflags=doctest.NORMALIZE_WHITESPACE|doctest.ELLIPSIS,
                 checker=renormalizing.OutputChecker([
-                    (re.compile(r"'updated': \d+(\.\d*)?"), '')
+                    (re.compile(r"'agents': {'test.example.com': \d+(\.\d*)?"),
+                     "'agents': {'test.example.com': ")
                     ])
                 ) + manuel.capture.Manuel(),
             'agent.rst',

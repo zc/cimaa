@@ -1,5 +1,5 @@
-import argparse
 import ConfigParser
+import argparse
 import gevent.subprocess
 import json
 import logging
@@ -24,8 +24,7 @@ class Agent:
         self.base_interval = float(options.get('base_interval', 60.0))
         self.timeout = float(options.get('timeout', self.base_interval * .7))
 
-        db = self.db = load_handler(parser, 'database')
-        db.heartbeat(aname, 'start')
+        self.db = load_handler(parser, 'database')
 
         alerter = self.alerter = load_handler(parser, 'alerter')
 
@@ -55,12 +54,12 @@ class Agent:
     def perform(self, minute):
         # start checks. XXX maybe we want to limit the number of checks
         # running at once.
-        self.heartbeat('performing')
         checklets = [(check, gevent.spawn(check.perform))
                      for check in self.checks]
 
         deadline = time.time() + self.timeout
         faults = []
+        critical = {}
         checked = set()
         squelches = None
         for check, checklet in checklets:
@@ -69,53 +68,38 @@ class Agent:
             checked.add(check.name)
             timeout = max(0, deadline - time.time())
             checklet.join(timeout)
-            self.heartbeat('checking '+check.name)
             cresults = checklet.value
             if cresults is None:
                 checklet.kill(block=False)
-                faults.append(monitor_error(
-                    'timeout', prefix=check.name+'#',
-                    severity=logging.CRITICAL))
-                if squelches is None:
-                    squelches = self.db.get_squelches()
-            else:
-                for f in cresults.get('faults', ()):
-                    if f.get('name', ''):
-                        f['name'] = check.name + '#' + f['name']
-                    else:
-                        f['name'] = check.name
-                    faults.append(f)
-                    if f['severity'] >= logging.CRITICAL and squelches is None:
+                cresults = dict(faults=[
+                    monitor_error('timeout', severity=logging.CRITICAL)
+                    ])
+            for f in cresults.get('faults', ()):
+                if f.get('name', ''):
+                    name = check.name + '#' + f['name']
+                else:
+                    name = check.name
+                f['name'] = name
+                faults.append(f)
+                if f['severity'] >= logging.CRITICAL:
+                    if squelches is None:
                         squelches = self.db.get_squelches()
+                    for squelch in squelches:
+                        if re.search(squelch, name):
+                            break
+                    else:
+                        message = f['message']
+                        critical[name] = message
+                        if self.critical.get(name) != message:
+                            self.alerter.trigger(name, message)
 
         self.db.set_faults(self.name, faults)
 
-        critical = {}
-        for f in faults:
-            if f['severity'] < logging.CRITICAL:
-                continue
-            for squelch in squelches:
-                if re.search(squelch, f['name']):
-                    break
-            else:
-                critical[f['name']] = f['message']
-
         if critical != self.critical:
-            self.heartbeat('triggering')
-            self.db.alert_start(self.name)
-            for name, message in critical.items():
-                if self.critical.get(name, None) != message:
-                    self.alerter.trigger(name, message)
             for name in self.critical:
                 if name not in critical and name.split('#')[0] in checked:
                     self.alerter.resolve(name)
             self.critical = critical
-            self.db.alert_finished(self.name)
-
-        self.heartbeat('performed')
-
-    def heartbeat(self, label):
-        self.db.heartbeat(self.name, label)
 
     def loop(self, count = -1):
         base_interval = self.base_interval
@@ -219,8 +203,8 @@ class Check:
                         f['severity'] = logging.CRITICAL
                 else:
                     for f in errors:
-                        f['message'] = f.get('message', '') + " (%s of %s)" % (
-                            self.failures, self.chances)
+                        f['message'] = "%s (%s of %s)" % (
+                            f.get('message', ''), self.failures, self.chances)
             else:
                 self.failures = 0
 
@@ -238,7 +222,11 @@ severity_names = dict(warning=logging.WARNING,
                       critical=logging.CRITICAL)
 
 def monitor_error(name, message='', prefix='', severity=logging.ERROR):
-    return dict(name=prefix+'monitor-'+name, message=message, severity=severity)
+    return dict(
+        name=(prefix + 'monitor-' + name),
+        message=message,
+        severity=severity,
+        )
 
 def load_handler(parser, name):
     config = dict(parser.items(name))
