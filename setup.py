@@ -14,11 +14,16 @@
 name, version = 'zc.cima', '0'
 
 install_requires = ['setuptools', 'gevent']
-extras_require = dict(test=['manuel', 'mock', 'zope.testing'])
+extras_require = dict(
+    test=['manuel', 'mock', 'zope.testing'],
+    dynamodb=['boto'],
+    )
 
 entry_points = """
 [console_scripts]
 agent = zc.cima.agent:main
+setup-dynamodb = zc.cima.dynamodb:setup
+squelch-dynamodb = zc.cima.dynamodb:squelch
 """
 
 from setuptools import setup
