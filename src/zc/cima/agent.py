@@ -1,5 +1,5 @@
-import argparse
 import ConfigParser
+import argparse
 import gevent.subprocess
 import json
 import logging
@@ -203,8 +203,8 @@ class Check:
                         f['severity'] = logging.CRITICAL
                 else:
                     for f in errors:
-                        f['message'] = f.get('message', '') + " (%s of %s)" % (
-                            self.failures, self.chances)
+                        f['message'] = "%s (%s of %s)" % (
+                            f.get('message', ''), self.failures, self.chances)
             else:
                 self.failures = 0
 
@@ -222,7 +222,11 @@ severity_names = dict(warning=logging.WARNING,
                       critical=logging.CRITICAL)
 
 def monitor_error(name, message='', prefix='', severity=logging.ERROR):
-    return dict(name=prefix+'monitor-'+name, message=message, severity=severity)
+    return dict(
+        name=(prefix + 'monitor-' + name),
+        message=message,
+        severity=severity,
+        )
 
 def load_handler(parser, name):
     config = dict(parser.items(name))
