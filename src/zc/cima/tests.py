@@ -13,7 +13,7 @@
 ##############################################################################
 from zope.testing import renormalizing, setupstack
 import doctest
-import unittest
+import json
 import manuel.capture
 import manuel.doctest
 import manuel.testing
@@ -22,7 +22,7 @@ import os
 import pprint
 import re
 import time
-
+import unittest
 
 class Logging:
 
@@ -37,8 +37,8 @@ class MemoryDB:
     def __init__(self, config):
         self.agents = {}
         self.alerts = {}
-        self.faults = {}
-        self.squelches = []
+        self.faults = json.loads(config.get('faults', '{}'))
+        self.squelches = {}
 
     def heartbeat(self, agent, status):
         self.agents[agent] = dict(
@@ -67,13 +67,23 @@ class MemoryDB:
                 yield name
 
     def get_faults(self, agent):
-        return self.faults[agent]
+        return self.faults.get(agent)
 
     def set_faults(self, agent, faults):
         self.faults[agent] = faults
 
     def get_squelches(self):
         return list(self.squelches)
+
+    def squelch(self, regex, reason, user):
+        self.squelches[regex] = dict(
+            reason = reason,
+            user = user,
+            time = 1417968068.01
+            )
+
+    def unsquelch(self, regex):
+        del self.squelches[regex]
 
     def __str__(self):
         return pprint.pformat(dict(
@@ -93,6 +103,9 @@ class OutputAlerter(Logging):
 
 def setUp(test):
     setupstack.setUpDirectory(test)
+    test.globs.update(
+        pprint = pprint.pprint,
+        )
     with open(os.path.join(os.path.dirname(__file__), 'filecheck_py')) as src:
         with open('filecheck.py', 'w') as dest:
             dest.write(src.read())
@@ -110,6 +123,6 @@ def test_suite():
                     ])
                 ) + manuel.capture.Manuel(),
             'agent.rst',
-            setUp = setUp, tearDown=setupstack.tearDown),
+            'schedule.rst',
+            setUp=setUp, tearDown=setupstack.tearDown),
         ))
-
