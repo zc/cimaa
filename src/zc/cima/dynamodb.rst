@@ -12,17 +12,16 @@ Additional configuration options:
 
 prefix
   A table name prefix, defaulting to ``cima``.  The tables used will
-  have names prefixes with this string and a
-  dot. (e.g. ``cima.agents``).
+  have names prefixed with this string and a dot (e.g. ``cima.agents``).
 
 aws_access_key_id and aws_secret_access_key
   Use these to specify keys in the configuration. If not specified,
   then credentials will be searched for in environment variables,
   ~/.boto and instance credentials.
 
-There are helper scripts for setting up dynamodb tables, and for for
-setting and unsetting squelches.  To use these, we need to set up a
-configuration file::
+There are helper scripts for setting up dynamodb tables, and for setting
+and unsetting squelches.  To use these, we need to set up a configuration
+file::
 
   [database]
   class = zc.cima.dynamodb
@@ -41,7 +40,7 @@ configuration file::
     >>> setup = pkg_resources.load_entry_point(
     ...     'zc.cima', 'console_scripts', 'setup-dynamodb')
 
-We call the seup script, passinb the name of the configuration file.
+We call the setup script, passing the name of the configuration file.
 
     >>> setup(['conf'])
 
