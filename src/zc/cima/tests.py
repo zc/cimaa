@@ -88,10 +88,11 @@ def setUp(test):
         test, mock.patch('socket.getfqdn', return_value='test.example.com'))
 
 def test_suite():
+    optionflags = doctest.NORMALIZE_WHITESPACE | doctest.ELLIPSIS
     suite = unittest.TestSuite((
         manuel.testing.TestSuite(
             manuel.doctest.Manuel(
-                optionflags=doctest.NORMALIZE_WHITESPACE|doctest.ELLIPSIS,
+                optionflags=optionflags,
                 checker=renormalizing.OutputChecker([
                     (re.compile(r"'agents': {'test.example.com': \d+(\.\d*)?"),
                      "'agents': {'test.example.com': ")
@@ -105,12 +106,12 @@ def test_suite():
         suite.addTest(
             manuel.testing.TestSuite(
                 manuel.doctest.Manuel(
-                    optionflags=doctest.NORMALIZE_WHITESPACE|doctest.ELLIPSIS,
+                    optionflags=optionflags,
                     checker=renormalizing.OutputChecker([
                         (re.compile(r"Decimal\('\d+(\.\d*)?'\)"), "")
                         ])
                     ) + manuel.capture.Manuel(),
                 'dynamodb.rst',
-                setUp = setUp, tearDown=setupstack.tearDown),
+                setUp=setUp, tearDown=setupstack.tearDown),
             )
     return suite
