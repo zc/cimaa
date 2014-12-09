@@ -60,7 +60,6 @@ Let's set up a database object.
 And perform some operations:
 
     >>> db.set_faults('agent', [])
-    >>> [atime] = [a['updated'] for a in db.dump('agents')]
     >>> db.get_faults('agent')
     []
 
@@ -81,15 +80,11 @@ And perform some operations:
     ...     dict(name='f2', severity=40, message='f2 is bad'),
     ...     ])
 
-The agent time isn't updated when we save faults:
-
-    >>> [atime] == [a['updated'] for a in db.dump('agents')]
-    True
-
     >>> pprint(db.dump())
-    {'agents': [{u'name': u'agent',
-                 u'updated': Decimal('1418068819.8888809680938720703125')}],
-     'faults': [{u'agent': u'agent',
+    {'faults': [{u'agent': u'_',
+                 u'name': u'agent',
+                 u'updated': Decimal('1418160088.916944026947021484375')},
+                {u'agent': u'agent',
                  u'message': u'f2 is bad',
                  u'name': u'f2',
                  u'severity': Decimal('40')},
@@ -103,6 +98,16 @@ The agent time isn't updated when we save faults:
                     u'time': Decimal('1418068818.7642829418182373046875'),
                     u'user': u'tester'}]}
 
+Notice that the faults data includes data for an agent '_'. This is
+heartbeat data that tells us when the agent last ran.  We can use this
+to find old agents:
+
+    >>> db.old_agents(900) # agents that haven't run in 15 minutes
+    []
+    >>> pprint(db.old_agents(0))
+    [{'name': u'agent',
+      'updated': Decimal('1418160088.916944026947021484375')}]
+
     >>> pprint(db.get_faults('agent'))
     [{u'agent': u'agent',
       u'message': u'f2 is bad',
@@ -115,14 +120,11 @@ The agent time isn't updated when we save faults:
       u'triggered': u'y'}]
     >>> db.set_faults('agent', [])
 
-    >>> [atime] < [a['updated'] for a in db.dump('agents')]
-    True
-
     >>> squelch(['conf', 'test', '-r'])
     >>> pprint(db.dump())
-    {'agents': [{u'name': u'agent',
-                 u'updated': Decimal('1418068821.55653095245361328125')}],
-     'faults': [],
+    {'faults': [{u'agent': u'_',
+                 u'name': u'agent',
+                 u'updated': Decimal('1418160089.4438440799713134765625')}],
      'squelches': []}
 
 

@@ -7,10 +7,22 @@ import boto.dynamodb2.types
 import time
 
 schemas = dict(
-    agents = dict(schema=[dynamodb2.fields.HashKey('name')]),
     squelches = dict(schema=[dynamodb2.fields.HashKey('regex')]),
     faults = dict(schema=[dynamodb2.fields.HashKey('agent'),
-                          dynamodb2.fields.RangeKey('name')]),
+                          dynamodb2.fields.RangeKey('name')],
+                  indexes=[
+                      dynamodb2.fields.IncludeIndex(
+                          'updated',
+                          parts = [
+                              dynamodb2.fields.HashKey('agent'),
+                              dynamodb2.fields.RangeKey(
+                                  'updated',
+                                  data_type = boto.dynamodb2.types.NUMBER),
+                              ],
+                          includes=['name', 'updated'],
+                          )
+                      ],
+                  ),
     )
 
 class DB:
@@ -20,6 +32,12 @@ class DB:
         conn, prefix = connect(config)
         for name in schemas:
             setattr(self, name, table(conn, prefix, name))
+
+    def old_agents(self, age):
+        max_updated = time.time() - age
+        return [dict(name=i['name'], updated=i['updated'])
+                for i in self.faults.query_2(
+                    index='updated', agent__eq='_', updated__lt=max_updated)]
 
     def get_faults(self, agent):
         faults = [dict(item.items())
@@ -33,19 +51,17 @@ class DB:
             self.get_faults(agent)
             old_faults = self.last_faults.get(agent)
 
-        if faults or old_faults:
-            with self.faults.batch_write() as batch:
-                for fault in faults:
-                    data = fault.copy()
-                    data['agent'] = agent
-                    batch.put_item(data, overwrite=True)
-                    old_faults.discard(data['name'])
-                for name in old_faults:
-                    batch.delete_item(agent=agent, name=name)
+        with self.faults.batch_write() as batch:
+            # Heartbeat
+            batch.put_item(dict(agent='_', name=agent, updated = time.time()))
 
-        if not faults:
-            self.agents.put_item(dict(name=agent, updated=time.time()),
-                                 overwrite=True)
+            for fault in faults:
+                data = fault.copy()
+                data['agent'] = agent
+                batch.put_item(data, overwrite=True)
+                old_faults.discard(data['name'])
+            for name in old_faults:
+                batch.delete_item(agent=agent, name=name)
 
         self.last_faults[agent] = set(fault['name'] for fault in faults)
 
@@ -63,12 +79,13 @@ class DB:
         self.squelches.delete_item(regex=regex)
 
     def dump(self, name=None):
-        if name:
-            return [dict(item.items()) for item in getattr(self, name).scan()]
         return dict(
-            agents = [dict(item.items()) for item in self.agents.scan()],
-            faults = [dict(item.items()) for item in self.faults.scan()],
-            squelches = [dict(item.items()) for item in self.squelches.scan()],
+            faults = sorted(
+                (dict(item.items()) for item in self.faults.scan()),
+                key=lambda item: (item['agent'], item['name'])),
+            squelches = sorted(
+                (dict(item.items()) for item in self.squelches.scan()),
+                key=lambda item: ['regex']),
             )
 
 def connect(config):

@@ -14,6 +14,13 @@ class IDB(zope.interface.Interface):
     """Interface for recording monitoring data
     """
 
+    def old_agents(age):
+        """Return a sequence of old agents and update times
+
+        An old agents are agents that haven't updated their faults in
+        a long time.
+        """
+
     def get_faults(agent):
         """Get previous faults for an agent.
 

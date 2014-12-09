@@ -130,7 +130,7 @@ def test_suite():
                 manuel.doctest.Manuel(
                     optionflags=optionflags,
                     checker=renormalizing.OutputChecker([
-                        (re.compile(r"Decimal\(%s'\)" % time_pat), "")
+                        (re.compile(r"Decimal\('%s'\)" % time_pat), "T")
                         ])
                     ) + manuel.capture.Manuel(),
                 'dynamodb.rst',
