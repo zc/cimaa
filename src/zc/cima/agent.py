@@ -23,15 +23,14 @@ class Agent:
         aname = self.name = options.get('name', socket.getfqdn())
         self.base_interval = float(options.get('base_interval', 60.0))
         self.timeout = float(options.get('timeout', self.base_interval * .7))
+        self.alert_timeout = float(options.get('timeout',
+                                               self.base_interval * .1))
 
         self.db = load_handler(parser, 'database')
 
         alerter = self.alerter = load_handler(parser, 'alerter')
 
-        self.critical = dict((f['name'], f['message'])
-                             for f in self.db.get_faults(self.name) or ()
-                             if f['severity'] >= logging.CRITICAL
-                             )
+        self._set_critical(self.db.get_faults(self.name))
 
         directory = options['directory']
         self.checks = checks = []
@@ -51,6 +50,13 @@ class Agent:
                     checks.append(Check(section, command,
                                         interval, retry, retry_interval))
 
+    def _set_critical(self, faults):
+        self.critical = dict(
+            (f['name'], f['message'] if f.get('triggered') else -1)
+            for f in faults
+            if f['severity'] >= logging.CRITICAL
+            )
+
     def perform(self, minute):
         # start checks. XXX maybe we want to limit the number of checks
         # running at once.
@@ -62,6 +68,8 @@ class Agent:
         critical = {}
         checked = set()
         squelches = None
+        squelched = set()
+        alerts = []
         for check, checklet in checklets:
             if not check.should_run(minute):
                 continue
@@ -89,17 +97,54 @@ class Agent:
                             break
                     else:
                         message = f['message']
-                        critical[name] = message
-                        if self.critical.get(name) != message:
-                            self.alerter.trigger(name, message)
+                        critical[name] = f
+                        if (name in self.critical and
+                            self.critical[name] == message):
+                            # This is a previously triggered fault, so
+                            # set triggered flag:
+                            f['triggered'] = 'y'
+                        else:
+                            alerts.append(self.trigger(f))
+
+        for name in self.critical:
+            if name not in critical and name.split('#')[0] in checked:
+                alerts.append(self.resolve(name))
+
+        deadline = time.time() + self.alert_timeout
+        alert_failed = 0
+        for alert in alerts:
+            timeout = max(deadline - time.time(), 0.0)
+            alert.join(timeout)
+            if not alert.value:
+                exception = alert.exception
+                logger.error("Alert failed: %s",
+                             "timeout" if exception is None else
+                             "%s: %s" % (exception.__class__.__name__,
+                                         exception))
+                alert_failed += 1
+
+        if alert_failed:
+            faults.append(dict(
+                name = self.name + '#alerts',
+                message = "Failed to send alert information (%s/%s)" % (
+                    alert_failed, len(alerts)),
+                severity = logging.CRITICAL,
+                ))
 
         self.db.set_faults(self.name, faults)
+        self._set_critical(critical.values())
 
-        if critical != self.critical:
-            for name in self.critical:
-                if name not in critical and name.split('#')[0] in checked:
-                    self.alerter.resolve(name)
-            self.critical = critical
+    def trigger(self, fault):
+
+        def trigger():
+            self.alerter.trigger(fault['name'], fault['message'])
+            fault['triggered'] = 'y' # DynamoDB does odd things with booleans
+            return 1
+
+        return gevent.spawn(trigger)
+
+    def resolve(self, name):
+        return gevent.spawn(lambda : [self.alerter.resolve(name)])
 
     def loop(self, count = -1):
         base_interval = self.base_interval

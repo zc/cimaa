@@ -13,16 +13,20 @@
 ##############################################################################
 from zope.testing import renormalizing, setupstack
 import doctest
+import gevent
 import json
 import manuel.capture
 import manuel.doctest
 import manuel.testing
 import mock
 import os
+import pdb
 import pprint
 import re
 import time
 import unittest
+
+import zc.cima.pagerduty # See if grequest monkey-patching breaks other things
 
 class Logging:
 
@@ -40,7 +44,7 @@ class MemoryDB:
         self.squelches = {}
 
     def get_faults(self, agent):
-        return self.faults.get(agent)
+        return self.faults.get(agent, ())
 
     def set_faults(self, agent, faults):
         self.faults[agent] = faults
@@ -65,19 +69,31 @@ class MemoryDB:
 
 class OutputAlerter(Logging):
 
+    nfail = 0
+    sleep = 0.0
+
     def __init__(self, config):
         pass
 
+    def fail(self):
+        if self.nfail > 0:
+            self.nfail -= 1
+            raise ValueError('fail')
+        gevent.sleep(self.sleep)
+
     def trigger(self, name, message):
+        self.fail()
         self.log('trigger', name, message)
 
     def resolve(self, name):
+        self.fail()
         self.log('resolve', name)
 
 
 def setUp(test):
     setupstack.setUpDirectory(test)
     test.globs.update(
+        pdb = pdb,
         pprint = pprint.pprint,
         )
     with open(os.path.join(os.path.dirname(__file__), 'filecheck_py')) as src:

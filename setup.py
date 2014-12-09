@@ -17,6 +17,7 @@ install_requires = ['setuptools', 'gevent']
 extras_require = dict(
     test=['manuel', 'mock', 'zope.testing'],
     dynamodb=['boto', 'keyring'],
+    pagerduty=['grequests'],
     )
 
 entry_points = """
