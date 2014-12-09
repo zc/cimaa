@@ -36,12 +36,14 @@ class IDB(zope.interface.Interface):
            This should be true whenever severity >= logging.CRITICAL,
            unless there's an alerting failure.
 
-        updated (not yet implemented)
+        updated
            The time the fault was last updated, as a time.time.
 
-        since (not yet implemented)
+        since
            The time the fault was last first detected within the
            current string of failures, as a time.time.
+
+           This must be maintained by the .
         """
 
     def set_faults(agent, faults):

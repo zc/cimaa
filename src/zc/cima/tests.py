@@ -15,6 +15,7 @@ from zope.testing import renormalizing, setupstack
 import doctest
 import gevent
 import json
+import logging
 import manuel.capture
 import manuel.doctest
 import manuel.testing
@@ -39,7 +40,6 @@ class Logging:
 class MemoryDB:
 
     def __init__(self, config):
-        self.agents = {}
         self.faults = json.loads(config.get('faults', '{}'))
         self.squelches = {}
 
@@ -47,8 +47,12 @@ class MemoryDB:
         return self.faults.get(agent, ())
 
     def set_faults(self, agent, faults):
+        times = dict((f[name], f['since'])
+                     for f in self.faults.get('agent', ())
+                     if f['name'])
+        for f in faults:
+            f['since'] = times.get(f['name'], f['updated'])
         self.faults[agent] = faults
-        self.agents[agent] = time.time()
 
     def get_squelches(self):
         return list(self.squelches)
@@ -64,8 +68,7 @@ class MemoryDB:
         del self.squelches[regex]
 
     def __str__(self):
-        return pprint.pformat(dict(
-            agents=self.agents, faults=self.faults))
+        return pprint.pformat(self.faults)
 
 class OutputAlerter(Logging):
 
@@ -105,13 +108,16 @@ def setUp(test):
 
 def test_suite():
     optionflags = doctest.NORMALIZE_WHITESPACE | doctest.ELLIPSIS
+    time_pat = r"\d+(\.\d*)?"
     suite = unittest.TestSuite((
         manuel.testing.TestSuite(
             manuel.doctest.Manuel(
                 optionflags=optionflags,
                 checker=renormalizing.OutputChecker([
-                    (re.compile(r"'agents': {'test.example.com': \d+(\.\d*)?"),
-                     "'agents': {'test.example.com': ")
+                    (re.compile(r"'agents': {'test.example.com': "+time_pat),
+                     "'agents': {'test.example.com': "),
+                    (re.compile(r"'since': "+time_pat), 'SINCE'),
+                    (re.compile(r"'updated': "+time_pat), 'UPDATED'),
                     ])
                 ) + manuel.capture.Manuel(),
             'agent.rst',
@@ -124,7 +130,7 @@ def test_suite():
                 manuel.doctest.Manuel(
                     optionflags=optionflags,
                     checker=renormalizing.OutputChecker([
-                        (re.compile(r"Decimal\('\d+(\.\d*)?'\)"), "")
+                        (re.compile(r"Decimal\(%s'\)" % time_pat), "")
                         ])
                     ) + manuel.capture.Manuel(),
                 'dynamodb.rst',
