@@ -129,7 +129,7 @@ class Agent:
                 message = "Failed to send alert information (%s/%s)" % (
                     alert_failed, len(alerts)),
                 severity = logging.CRITICAL,
-                updated = time.time()
+                updated = time.time(),
                 ))
 
         self.db.set_faults(self.name, faults)
@@ -237,7 +237,7 @@ class Check:
                 if status < 4:
                     if status:
                         faults.append(dict(severity=status_codes[status],
-                                             message=stdout))
+                                           message=stdout))
                 else:
                     faults.append(monitor_error("status", stdout))
                     status = logging.CRITICAL
@@ -267,7 +267,7 @@ class Check:
                 name='checker',
                 message = "%s: %s" % (v.__class__.__name__, v),
                 severity = logging.CRITICAL,
-                updated = time.time()
+                updated = time.time(),
                 )])
 
 severity_names = dict(warning=logging.WARNING,
