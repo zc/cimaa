@@ -25,6 +25,8 @@ import re
 import time
 import unittest
 
+import zc.cima.pagerduty # See if grequest monkey-patching breaks other things
+
 class Logging:
 
     trace = True
