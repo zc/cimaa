@@ -77,7 +77,7 @@ And perform some operations:
     ...     ])
 
     >>> db.set_faults('agent', [
-    ...     dict(name='f3', severity=40, message='f3 is bad'),
+    ...     dict(name='f3', severity=50, message='f3 is bad', triggered='y'),
     ...     dict(name='f2', severity=40, message='f2 is bad'),
     ...     ])
 
@@ -96,7 +96,8 @@ The agent time isn't updated when we save faults:
                 {u'agent': u'agent',
                  u'message': u'f3 is bad',
                  u'name': u'f3',
-                 u'severity': Decimal('40')}],
+                 u'severity': Decimal('50'),
+                 u'triggered': u'y'}],
      'squelches': [{u'reason': u'testing',
                     u'regex': u'test',
                     u'time': Decimal('1418068818.7642829418182373046875'),
@@ -110,7 +111,8 @@ The agent time isn't updated when we save faults:
      {u'agent': u'agent',
       u'message': u'f3 is bad',
       u'name': u'f3',
-      u'severity': Decimal('40')}]
+      u'severity': Decimal('50'),
+      u'triggered': u'y'}]
     >>> db.set_faults('agent', [])
 
     >>> [atime] < [a['updated'] for a in db.dump('agents')]

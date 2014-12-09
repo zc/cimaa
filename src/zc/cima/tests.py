@@ -20,6 +20,7 @@ import manuel.doctest
 import manuel.testing
 import mock
 import os
+import pdb
 import pprint
 import re
 import time
@@ -43,7 +44,7 @@ class MemoryDB:
         self.squelches = {}
 
     def get_faults(self, agent):
-        return self.faults.get(agent)
+        return self.faults.get(agent, ())
 
     def set_faults(self, agent, faults):
         self.faults[agent] = faults
@@ -92,6 +93,7 @@ class OutputAlerter(Logging):
 def setUp(test):
     setupstack.setUpDirectory(test)
     test.globs.update(
+        pdb = pdb,
         pprint = pprint.pprint,
         )
     with open(os.path.join(os.path.dirname(__file__), 'filecheck_py')) as src:

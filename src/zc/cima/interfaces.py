@@ -17,7 +17,7 @@ class IDB(zope.interface.Interface):
     def get_faults(agent):
         """Get previous faults for an agent.
 
-        A list of dictionaries is returned.
+        A sequence of dictionaries is returned.
 
         Faults have items:
 
@@ -29,6 +29,12 @@ class IDB(zope.interface.Interface):
 
         message
            A message describing the fault.
+
+        triggered (optional)
+           Present and true of an alert has been triggered for the fault.
+
+           This should be true whenever severity >= logging.CRITICAL,
+           unless there's an alerting failure.
 
         updated (not yet implemented)
            The time the fault was last updated, as a time.time.

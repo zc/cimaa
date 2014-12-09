@@ -300,7 +300,8 @@ does, then we'll alert immediately.  We don't retry:
     {'agents': ...
      'faults': {'test.example.com': [{u'message': u'Panic!',
                                       'name': '//test.example.com/test/foo.txt',
-                                      u'severity': 50}]}}
+                                      u'severity': 50,
+                                      'triggered': 'y'}]}}
 
     >>> with open('foo.txt', 'w') as f:
     ...     f.write(
@@ -313,7 +314,8 @@ does, then we'll alert immediately.  We don't retry:
     {'agents': ...
           'faults': {'test.example.com': [{u'message': u'Panic!',
                                 u'name': u'//test.example.com/test/foo.txt#OMG',
-                                      u'severity': 99}]}}
+                                      u'severity': 99,
+                                      'triggered': 'y'}]}}
 
 Checks can use severity names
 =============================
@@ -348,7 +350,8 @@ for severities:
     {'agents': ...
      'faults': {'test.example.com': [{u'message': u'Panic!',
                                       'name': '//test.example.com/test/foo.txt',
-                                      u'severity': 50}]}}
+                                      u'severity': 50,
+                                      'triggered': 'y'}]}}
 
 Alert failures
 ==============
@@ -412,7 +415,8 @@ Similarly, if alerting times out:
     {'agents': {'test.example.com': 1418133562.12335},
      'faults': {'test.example.com': [{u'message': u'Panic!',
                                       'name': '//test.example.com/test/foo.txt',
-                                      u'severity': 50},...
+                                      u'severity': 50,
+                                      'triggered': 'y'},...
                           {'message': 'Failed to send alert information (3/3)',
                            'name': 'test.example.com#alerts',
                            'severity': 50}]}}

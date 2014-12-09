@@ -30,10 +30,7 @@ class Agent:
 
         alerter = self.alerter = load_handler(parser, 'alerter')
 
-        self.critical = dict((f['name'], f['message'])
-                             for f in self.db.get_faults(self.name) or ()
-                             if f['severity'] >= logging.CRITICAL
-                             )
+        self._set_critical(self.db.get_faults(self.name))
 
         directory = options['directory']
         self.checks = checks = []
@@ -53,6 +50,13 @@ class Agent:
                     checks.append(Check(section, command,
                                         interval, retry, retry_interval))
 
+    def _set_critical(self, faults):
+        self.critical = dict(
+            (f['name'], f['message'] if f.get('triggered') else -1)
+            for f in faults
+            if f['severity'] >= logging.CRITICAL
+            )
+
     def perform(self, minute):
         # start checks. XXX maybe we want to limit the number of checks
         # running at once.
@@ -64,6 +68,7 @@ class Agent:
         critical = {}
         checked = set()
         squelches = None
+        squelched = set()
         alerts = []
         for check, checklet in checklets:
             if not check.should_run(minute):
@@ -92,15 +97,18 @@ class Agent:
                             break
                     else:
                         message = f['message']
-                        critical[name] = message
-                        if self.critical.get(name) != message:
-                            alerts.append(self.trigger(name, message))
+                        critical[name] = f
+                        if (name in self.critical and
+                            self.critical[name] == message):
+                            # This is a previously triggered fault, so
+                            # set triggered flag:
+                            f['triggered'] = 'y'
+                        else:
+                            alerts.append(self.trigger(f))
 
-        if critical != self.critical:
-            for name in self.critical:
-                if name not in critical and name.split('#')[0] in checked:
-                    alerts.append(self.resolve(name))
-            self.critical = critical
+        for name in self.critical:
+            if name not in critical and name.split('#')[0] in checked:
+                alerts.append(self.resolve(name))
 
         deadline = time.time() + self.alert_timeout
         alert_failed = 0
@@ -124,9 +132,16 @@ class Agent:
                 ))
 
         self.db.set_faults(self.name, faults)
+        self._set_critical(critical.values())
 
-    def trigger(self, name, message):
-        return gevent.spawn(lambda : [self.alerter.trigger(name, message)])
+    def trigger(self, fault):
+
+        def trigger():
+            self.alerter.trigger(fault['name'], fault['message'])
+            fault['triggered'] = 'y' # DynamoDB does odd things with booleans
+            return 1
+
+        return gevent.spawn(trigger)
 
     def resolve(self, name):
         return gevent.spawn(lambda : [self.alerter.resolve(name)])
