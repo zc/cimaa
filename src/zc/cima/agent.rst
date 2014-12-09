@@ -483,4 +483,13 @@ If we perform a chech that succeeds, the previous fault will be resolved:
     >>> agent.perform(0)
     OutputAlerter resolve //test.example.com/test/foo.txt
 
+Hearbeats
+=========
 
+It's the responsibility for databases to keep track of heartbeats when
+agents update faults.  They expose an old_agents method:
+
+    >>> agent.db.old_agents(900) # agents inactive for 15 minutes
+    []
+    >>> pprint(agent.db.old_agents(0))
+    [{'name': 'test.example.com', 'updated': 1418152356.978025}]
