@@ -13,6 +13,7 @@
 ##############################################################################
 from zope.testing import renormalizing, setupstack
 import doctest
+import gevent
 import json
 import manuel.capture
 import manuel.doctest
@@ -69,10 +70,10 @@ class OutputAlerter(Logging):
         pass
 
     def trigger(self, name, message):
-        self.log('trigger', name, message)
+        return gevent.spawn(lambda : [self.log('trigger', name, message)])
 
     def resolve(self, name):
-        self.log('resolve', name)
+        return gevent.spawn(lambda : [self.log('resolve', name)])
 
 
 def setUp(test):

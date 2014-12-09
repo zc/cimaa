@@ -23,6 +23,8 @@ class Agent:
         aname = self.name = options.get('name', socket.getfqdn())
         self.base_interval = float(options.get('base_interval', 60.0))
         self.timeout = float(options.get('timeout', self.base_interval * .7))
+        self.alert_timeout = float(options.get('timeout',
+                                               self.base_interval * .1))
 
         self.db = load_handler(parser, 'database')
 
@@ -62,6 +64,7 @@ class Agent:
         critical = {}
         checked = set()
         squelches = None
+        alerts = []
         for check, checklet in checklets:
             if not check.should_run(minute):
                 continue
@@ -91,15 +94,36 @@ class Agent:
                         message = f['message']
                         critical[name] = message
                         if self.critical.get(name) != message:
-                            self.alerter.trigger(name, message)
-
-        self.db.set_faults(self.name, faults)
+                            alerts.append(self.alerter.trigger(name, message))
 
         if critical != self.critical:
             for name in self.critical:
                 if name not in critical and name.split('#')[0] in checked:
-                    self.alerter.resolve(name)
+                    alerts.append(self.alerter.resolve(name))
             self.critical = critical
+
+        deadline = time.time() + self.alert_timeout
+        alert_failed = False
+        for alert in alerts:
+            timeout = max(deadline - time.time(), 0.0)
+            alert.join(timeout)
+            if not alert.value:
+                exception = alert.exception
+                logger.error("Alert failed: %s",
+                             "timeout" if exception is None else
+                             "%s: %s" % (exception.__class__.__name__,
+                                         exception))
+                alert_failed = True
+
+        if alert_failed:
+            faults.append(dict(
+                name = self.name + '#alerts',
+                message = "Failed to send alert information",
+                severity = logging.critical,
+                ))
+
+        self.db.set_faults(self.name, faults)
+
 
     def loop(self, count = -1):
         base_interval = self.base_interval
