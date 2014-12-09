@@ -17,7 +17,7 @@ class IDB(zope.interface.Interface):
     def old_agents(age):
         """Return a sequence of old agents and update times
 
-        An old agents are agents that haven't updated their faults in
+        Old agents are agents that haven't updated their faults in
         a long time.
         """
 
