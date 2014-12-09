@@ -4,25 +4,26 @@ from boto import dynamodb2
 import boto.dynamodb2.fields
 import boto.dynamodb2.table
 import boto.dynamodb2.types
+import sys
 import time
 
 schemas = dict(
-    squelches = dict(schema=[dynamodb2.fields.HashKey('regex')]),
-    faults = dict(schema=[dynamodb2.fields.HashKey('agent'),
-                          dynamodb2.fields.RangeKey('name')],
-                  indexes=[
-                      dynamodb2.fields.IncludeIndex(
-                          'updated',
-                          parts = [
-                              dynamodb2.fields.HashKey('agent'),
-                              dynamodb2.fields.RangeKey(
-                                  'updated',
-                                  data_type = boto.dynamodb2.types.NUMBER),
-                              ],
-                          includes=['name', 'updated'],
-                          )
-                      ],
-                  ),
+    squelches=dict(schema=[dynamodb2.fields.HashKey('regex')]),
+    faults=dict(schema=[dynamodb2.fields.HashKey('agent'),
+                        dynamodb2.fields.RangeKey('name')],
+                indexes=[
+                    dynamodb2.fields.IncludeIndex(
+                        'updated',
+                        parts=[
+                            dynamodb2.fields.HashKey('agent'),
+                            dynamodb2.fields.RangeKey(
+                                'updated',
+                                data_type=boto.dynamodb2.types.NUMBER),
+                            ],
+                        includes=['name', 'updated'],
+                        )
+                    ],
+                ),
     )
 
 class DB:
@@ -53,7 +54,7 @@ class DB:
 
         with self.faults.batch_write() as batch:
             # Heartbeat
-            batch.put_item(dict(agent='_', name=agent, updated = time.time()))
+            batch.put_item(dict(agent='_', name=agent, updated=time.time()))
 
             for fault in faults:
                 data = fault.copy()
@@ -162,4 +163,3 @@ def squelch(args=None):
         if args.reason is None:
             raise ValueError("A reason must be supplied when adding squelches")
         db.squelch(args.regex, args.reason, getpass.getuser())
-
