@@ -42,6 +42,13 @@ class MemoryDB:
     def __init__(self, config):
         self.faults = json.loads(config.get('faults', '{}'))
         self.squelches = {}
+        self.agents = {}
+
+    def old_agents(self, age):
+        max_updated = time.time() - age
+        return [dict(name=k, updated=v) for k, v in self.agents.items()
+                if v < max_updated]
+
 
     def get_faults(self, agent):
         return self.faults.get(agent, ())
@@ -53,6 +60,7 @@ class MemoryDB:
         for f in faults:
             f['since'] = times.get(f['name'], f['updated'])
         self.faults[agent] = faults
+        self.agents[agent] = time.time()
 
     def get_squelches(self):
         return list(self.squelches)
