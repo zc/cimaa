@@ -129,6 +129,7 @@ class Agent:
                 message = "Failed to send alert information (%s/%s)" % (
                     alert_failed, len(alerts)),
                 severity = logging.CRITICAL,
+                updated = time.time()
                 ))
 
         self.db.set_faults(self.name, faults)
@@ -200,6 +201,7 @@ class Check:
                 raise
 
             status = proc.returncode
+            now = time.time()
 
             if status == 0 and stdout.startswith('{'):
                 try:
@@ -209,34 +211,39 @@ class Check:
                             f['severity'] = severity_names[
                                 f['severity'].lower()]
                         f['message']
+                        f['updated'] = now
                 except Exception, v:
                     logger.exception("Bad json response for %s", self.name)
                     result = dict(faults=[dict(
                         name='json-error',
                         message = "%s: %s" % (v.__class__.__name__, v),
                         severity = logging.CRITICAL,
+                        updated = now,
                         )])
             else:
-                failures = []
-                result = dict(faults=failures)
+                faults = []
+                result = dict(faults=faults)
 
                 if stderr:
-                    failures.append(monitor_error("stderr", stderr))
+                    faults.append(monitor_error("stderr", stderr))
 
                 stdout = stdout or stderr
                 if not stdout:
-                    failures.append(monitor_error("no-out"))
+                    faults.append(monitor_error("no-out"))
                     stdout = "(no output)"
                 if len(stdout) > 200:
                     stdout = stdout[:200]+' ...'
 
                 if status < 4:
                     if status:
-                        failures.append(dict(severity=status_codes[status],
+                        faults.append(dict(severity=status_codes[status],
                                              message=stdout))
                 else:
-                    failures.append(monitor_error("status", stdout))
+                    faults.append(monitor_error("status", stdout))
                     status = logging.CRITICAL
+
+                for f in faults:
+                    f['updated'] = now
 
             # handle soft errors
             errors = [f for f in result.get('faults', ())
@@ -260,6 +267,7 @@ class Check:
                 name='checker',
                 message = "%s: %s" % (v.__class__.__name__, v),
                 severity = logging.CRITICAL,
+                updated = time.time()
                 )])
 
 severity_names = dict(warning=logging.WARNING,
@@ -271,6 +279,7 @@ def monitor_error(name, message='', prefix='', severity=logging.ERROR):
         name=(prefix + 'monitor-' + name),
         message=message,
         severity=severity,
+        updated=time.time(),
         )
 
 def load_handler(parser, name):

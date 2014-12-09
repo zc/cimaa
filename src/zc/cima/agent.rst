@@ -82,7 +82,7 @@ Now, let's create an agent:
     >>> import zc.cima.agent
     >>> agent = zc.cima.agent.Agent('agent.cfg')
 
-We can see tit has the check:
+We can see it has the check:
 
     >>> [check.name for check in agent.checks]
     ['//test.example.com/test/foo.txt']
@@ -106,15 +106,12 @@ The file we were checking for wasn't there, but we didn't get an
 alert. Let's look at our database:
 
     >>> print agent.db
-    {'agents': {'test.example.com': 1417804927.88},
-     'faults': {'test.example.com': [{'message':
-                                      "'foo.txt' doesn't exist\n (1 of 4)",
-                                      'name': '//test.example.com/test/foo.txt',
-                                      'severity': 40}]}}
-
-The database includes informatiomn about the agents last activity. In
-particular, it shows the time of the last activity, which is used by a
-meta monitor to detect dead agents.
+    {'test.example.com': [{'message':
+                           "'foo.txt' doesn't exist\n (1 of 4)",
+                           'name': '//test.example.com/test/foo.txt',
+                           'severity': 40,
+                           'since': 1418150723.793376,
+                           'updated': 1418150723.793376}]}
 
 We didn't get alert because our default policy is to retry up to 3
 times.
@@ -144,11 +141,12 @@ If we create a file, we'll clear the alert:
 If we look at the database, we'll see we still have a warning:
 
     >>> print agent.db
-    {'agents': ...
-     'faults': {'test.example.com': [{'message':
-                                      "'foo.txt' exists, but is empty\n",
-                                      'name': '//test.example.com/test/foo.txt',
-                                      'severity': 30}]}}
+    {'test.example.com': [{'message':
+                           "'foo.txt' exists, but is empty\n",
+                           'name': '//test.example.com/test/foo.txt',
+                           'severity': 30,
+                           'since': 1418150723.904819,
+                           'updated': 1418150723.904819}]}
 
 Let's fix it:
 
@@ -156,8 +154,10 @@ Let's fix it:
     ...     f.write('tester was here')
     >>> agent.perform(0)
     >>> print agent.db
-    {'agents': ...
-     'faults': {'test.example.com': []}}
+    {'test.example.com': []}
+
+Now we have an entry in the agents mapping.  Whenever we don't have
+faults for an agent, we record 
 
 Dealing with misbehaving checks
 ===============================
@@ -170,11 +170,12 @@ Nagios plugin wrote to stderr:
     ...     f.write('stderr')
     >>> agent.perform(0)
     >>> print agent.db
-    {'agents': ...
-     'faults': {'test.example.com': [{'message': 'what hapenned? (1 of 4)',
-                                      'name':
-                              '//test.example.com/test/foo.txt#monitor-stderr',
-                                      'severity': 40}]}}
+    {'test.example.com': [{'message': 'what hapenned? (1 of 4)',
+                           'name':
+                           '//test.example.com/test/foo.txt#monitor-stderr',
+                           'severity': 40,
+                           'since': 1418150723.953077,
+                           'updated': 1418150723.953077}]}
 
 Nagios plugin didn't write to stdout:
 
@@ -182,10 +183,12 @@ Nagios plugin didn't write to stdout:
     ...     f.write('noout')
     >>> agent.perform(0)
     >>> print agent.db
-    {'agents': ...
-     'faults': {'test.example.com': [{'message': ' (2 of 4)',
-                      'name': '//test.example.com/test/foo.txt#monitor-no-out',
-                                      'severity': 40}]}}
+    {'test.example.com': [{'message': ' (2 of 4)',
+                           'name':
+                           '//test.example.com/test/foo.txt#monitor-no-out',
+                           'severity': 40,
+                           'since': 1418150723.976878,
+                           'updated': 1418150723.976878}]}
 
 Nagios plugin returned a unknown status code:
 
@@ -193,10 +196,12 @@ Nagios plugin returned a unknown status code:
     ...     f.write('status')
     >>> agent.perform(0)
     >>> print agent.db
-    {'agents': ...
-     'faults': {'test.example.com': [{'message': "'foo.txt' exists\n (3 of 4)",
-                      'name': '//test.example.com/test/foo.txt#monitor-status',
-                                      'severity': 40}]}}
+    {'test.example.com': [{'message': "'foo.txt' exists\n (3 of 4)",
+                           'name':
+                           '//test.example.com/test/foo.txt#monitor-status',
+                           'severity': 40,
+                           'since': 1418150724.000927,
+                           'updated': 1418150724.000927}]}
 
 Squelch
 =======
@@ -213,10 +218,12 @@ applications. They record the time at which the squelch was set:
     >>> agent.perform(0)
     >>> agent.perform(0)
     >>> print agent.db
-    {'agents': ...
-          'faults': {'test.example.com': [{'message': "'foo.txt' exists\n",
-                      'name': '//test.example.com/test/foo.txt#monitor-status',
-                                      'severity': 50}]}}
+    {'test.example.com': [{'message': "'foo.txt' exists\n",
+                           'name':
+                           '//test.example.com/test/foo.txt#monitor-status',
+                           'severity': 50,
+                           'since': 1418150724.048694,
+                           'updated': 1418150724.048694}]}
 
 Here, we didn't get an alert, even though we has a critical fault.
 
@@ -238,8 +245,7 @@ checker will return file contents of they're JSON:
     >>> agent.perform(0)
     OutputAlerter resolve //test.example.com/test/foo.txt#monitor-status
     >>> print agent.db
-    {'agents': ...
-     'faults': {'test.example.com': []}}
+    {'test.example.com': []}
 
 We generate a fault of json is malformed or lacks a faults property:
 
@@ -297,25 +303,27 @@ does, then we'll alert immediately.  We don't retry:
     OutputAlerter trigger //test.example.com/test/foo.txt Panic!
 
     >>> print agent.db
-    {'agents': ...
-     'faults': {'test.example.com': [{u'message': u'Panic!',
-                                      'name': '//test.example.com/test/foo.txt',
-                                      u'severity': 50,
-                                      'triggered': 'y'}]}}
+    {'test.example.com': [{u'message': u'Panic!',
+                           'name': '//test.example.com/test/foo.txt',
+                           u'severity': 50,
+                           'since': 1418152356.382218,
+                           'triggered': 'y',
+                           'updated': 1418152356.382218}]}
 
     >>> with open('foo.txt', 'w') as f:
-    ...     f.write(
-    ...      '{"faults": [{"message": "Panic!", "severity": 99, "name": "OMG"}]}')
+    ...   f.write(
+    ...    '{"faults": [{"message": "Panic!", "severity": 99, "name": "OMG"}]}')
     >>> agent.perform(0)
     OutputAlerter trigger //test.example.com/test/foo.txt#OMG Panic!
     OutputAlerter resolve //test.example.com/test/foo.txt
 
     >>> print agent.db
-    {'agents': ...
-          'faults': {'test.example.com': [{u'message': u'Panic!',
-                                u'name': u'//test.example.com/test/foo.txt#OMG',
-                                      u'severity': 99,
-                                      'triggered': 'y'}]}}
+    {'test.example.com': [{u'message': u'Panic!',
+                           u'name': u'//test.example.com/test/foo.txt#OMG',
+                           u'severity': 99,
+                           'since': 1418152356.406125,
+                           'triggered': 'y',
+                           'updated': 1418152356.406125}]}
 
 Checks can use severity names
 =============================
@@ -328,30 +336,33 @@ for severities:
     >>> agent.perform(0)
     OutputAlerter resolve //test.example.com/test/foo.txt#OMG
     >>> print agent.db
-    {'agents': ...
-     'faults': {'test.example.com': [{u'message': u'Worry',
-                                      'name': '//test.example.com/test/foo.txt',
-                                      u'severity': 30}]}}
+    {'test.example.com': [{u'message': u'Worry',
+                           'name': '//test.example.com/test/foo.txt',
+                           u'severity': 30,
+                           'since': 1418152356.455423,
+                           'updated': 1418152356.455423}]}
 
     >>> with open('foo.txt', 'w') as f:
     ...     f.write('{"faults": [{"message": "Bad", "severity": "Error"}]}')
     >>> agent.perform(0)
     >>> print agent.db
-    {'agents': ...
-     'faults': {'test.example.com': [{u'message': u'Bad (1 of 4)',
-                                      'name': '//test.example.com/test/foo.txt',
-                                      u'severity': 40}]}}
+    {'test.example.com': [{u'message': u'Bad (1 of 4)',
+                           'name': '//test.example.com/test/foo.txt',
+                           u'severity': 40,
+                           'since': 1418152356.455423,
+                           'updated': 1418152356.455423}]}
 
     >>> with open('foo.txt', 'w') as f:
     ...   f.write('{"faults": [{"message": "Panic!", "severity": "critical"}]}')
     >>> agent.perform(0)
     OutputAlerter trigger //test.example.com/test/foo.txt Panic!
     >>> print agent.db
-    {'agents': ...
-     'faults': {'test.example.com': [{u'message': u'Panic!',
-                                      'name': '//test.example.com/test/foo.txt',
-                                      u'severity': 50,
-                                      'triggered': 'y'}]}}
+    {'test.example.com': [{u'message': u'Panic!',
+                           'name': '//test.example.com/test/foo.txt',
+                           u'severity': 50,
+                           'since': 1418152356.481507,
+                           'triggered': 'y',
+                           'updated': 1418152356.481507}]}
 
 Alert failures
 ==============
@@ -394,13 +405,14 @@ We arranged fort the alerter to fail twice, so we'll get one alert:
 And we'll get a fault in the database:
 
     >>> print agent.db
-    {'agents': {'test.example.com': 1418133060.060347},
-     'faults': {'test.example.com': [{u'message': u'Panic!',
-                                      'name': '//test.example.com/test/foo.txt',
-                                      u'severity': 50},...
+    {'test.example.com': [{u'message': u'Panic!',
+                           'name': '//test.example.com/test/foo.txt',
+                           u'severity': 50...
                            {'message': 'Failed to send alert information (2/3)',
                             'name': 'test.example.com#alerts',
-                            'severity': 50}]}}
+                            'severity': 50,
+                            'since': 1418152356.511802,
+                            'updated': 1418152356.511802}]}
 
 Similarly, if alerting times out:
 
@@ -412,14 +424,14 @@ Similarly, if alerting times out:
     OutputAlerter ...
 
     >>> print agent.db
-    {'agents': {'test.example.com': 1418133562.12335},
-     'faults': {'test.example.com': [{u'message': u'Panic!',
-                                      'name': '//test.example.com/test/foo.txt',
-                                      u'severity': 50,
-                                      'triggered': 'y'},...
+    {'test.example.com': [{u'message': u'Panic!',
+                           'name': '//test.example.com/test/foo.txt',
+                           u'severity': 50...
                           {'message': 'Failed to send alert information (3/3)',
                            'name': 'test.example.com#alerts',
-                           'severity': 50}]}}
+                           'severity': 50,
+                           'since': 1418152356.644426,
+                           'updated': 1418152356.644426}]}
 
 Same handling of timeout/errors on resolve:
 
@@ -433,11 +445,12 @@ Same handling of timeout/errors on resolve:
     OutputAlerter ...
 
     >>> print agent.db
-    {'agents': {'test.example.com': 1418134302.774271},
-     'faults': {'test.example.com': [{'message':
-                                      'Failed to send alert information (3/3)',
-                                      'name': 'test.example.com#alerts',
-                                      'severity': 50}]}}
+    {'test.example.com': [{'message':
+                           'Failed to send alert information (3/3)',
+                           'name': 'test.example.com#alerts',
+                           'severity': 50,
+                           'since': 1418152356.978025,
+                           'updated': 1418152356.978025}]}
 
 
 Loading state on startup
