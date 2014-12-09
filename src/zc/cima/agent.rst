@@ -156,9 +156,6 @@ Let's fix it:
     >>> print agent.db
     {'test.example.com': []}
 
-Now we have an entry in the agents mapping.  Whenever we don't have
-faults for an agent, we record 
-
 Dealing with misbehaving checks
 ===============================
 
