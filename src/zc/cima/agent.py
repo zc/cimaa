@@ -94,16 +94,16 @@ class Agent:
                         message = f['message']
                         critical[name] = message
                         if self.critical.get(name) != message:
-                            alerts.append(self.alerter.trigger(name, message))
+                            alerts.append(self.trigger(name, message))
 
         if critical != self.critical:
             for name in self.critical:
                 if name not in critical and name.split('#')[0] in checked:
-                    alerts.append(self.alerter.resolve(name))
+                    alerts.append(self.resolve(name))
             self.critical = critical
 
         deadline = time.time() + self.alert_timeout
-        alert_failed = False
+        alert_failed = 0
         for alert in alerts:
             timeout = max(deadline - time.time(), 0.0)
             alert.join(timeout)
@@ -113,17 +113,23 @@ class Agent:
                              "timeout" if exception is None else
                              "%s: %s" % (exception.__class__.__name__,
                                          exception))
-                alert_failed = True
+                alert_failed += 1
 
         if alert_failed:
             faults.append(dict(
                 name = self.name + '#alerts',
-                message = "Failed to send alert information",
-                severity = logging.critical,
+                message = "Failed to send alert information (%s/%s)" % (
+                    alert_failed, len(alerts)),
+                severity = logging.CRITICAL,
                 ))
 
         self.db.set_faults(self.name, faults)
 
+    def trigger(self, name, message):
+        return gevent.spawn(lambda : [self.alerter.trigger(name, message)])
+
+    def resolve(self, name):
+        return gevent.spawn(lambda : [self.alerter.resolve(name)])
 
     def loop(self, count = -1):
         base_interval = self.base_interval

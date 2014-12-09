@@ -66,14 +66,25 @@ class MemoryDB:
 
 class OutputAlerter(Logging):
 
+    nfail = 0
+    sleep = 0.0
+
     def __init__(self, config):
         pass
 
+    def fail(self):
+        if self.nfail > 0:
+            self.nfail -= 1
+            raise ValueError('fail')
+        gevent.sleep(self.sleep)
+
     def trigger(self, name, message):
-        return gevent.spawn(lambda : [self.log('trigger', name, message)])
+        self.fail()
+        self.log('trigger', name, message)
 
     def resolve(self, name):
-        return gevent.spawn(lambda : [self.log('resolve', name)])
+        self.fail()
+        self.log('resolve', name)
 
 
 def setUp(test):

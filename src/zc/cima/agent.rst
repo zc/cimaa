@@ -350,6 +350,92 @@ for severities:
                                       'name': '//test.example.com/test/foo.txt',
                                       u'severity': 50}]}}
 
+Alert failures
+==============
+
+If an alerter fails, we add a fault.
+
+Let's some more checks::
+
+  [foo.txt2]
+  command = PY filecheck.py foo.txt
+
+  [foo.txt3]
+  command = PY filecheck.py foo.txt
+
+.. -> src
+
+   >>> import sys
+   >>> with open(os.path.join('agent.d', 'test2.cfg'), 'w') as f:
+   ...     f.write(src.replace('PY', sys.executable))
+
+And recreate our agent:
+
+    >>> agent = zc.cima.agent.Agent('agent.cfg')
+
+We arrange out alerter to fail:
+
+    >>> agent.alerter.nfail = 2
+
+We arranged fort the alerter to fail twice, so we'll get one alert:
+
+    >>> agent.perform(0)
+    Traceback (most recent call last):
+    ...
+    ValueError: fail
+    Traceback (most recent call last):
+    ...
+    ValueError: fail
+    OutputAlerter trigger //test.example.com/test2/foo.txt3 Panic!
+
+And we'll get a fault in the database:
+
+    >>> print agent.db
+    {'agents': {'test.example.com': 1418133060.060347},
+     'faults': {'test.example.com': [{u'message': u'Panic!',
+                                      'name': '//test.example.com/test/foo.txt',
+                                      u'severity': 50},...
+                           {'message': 'Failed to send alert information (2/3)',
+                            'name': 'test.example.com#alerts',
+                            'severity': 50}]}}
+
+Similarly, if alerting times out:
+
+    >>> agent.alert_timeout = .1
+    >>> agent.alerter.sleep = .2
+    >>> agent.critical = {}
+    >>> import gevent
+    >>> agent.perform(0); gevent.sleep(.2)
+    OutputAlerter ...
+
+    >>> print agent.db
+    {'agents': {'test.example.com': 1418133562.12335},
+     'faults': {'test.example.com': [{u'message': u'Panic!',
+                                      'name': '//test.example.com/test/foo.txt',
+                                      u'severity': 50},...
+                          {'message': 'Failed to send alert information (3/3)',
+                           'name': 'test.example.com#alerts',
+                           'severity': 50}]}}
+
+Same handling of timeout/errors on resolve:
+
+    >>> with open('foo.txt', 'w') as f:
+    ...   f.write('test')
+    >>> agent.alerter.nfail = 1
+    >>> agent.perform(0); gevent.sleep(.2)
+    Traceback (most recent call last):
+    ...
+    ValueError: fail
+    OutputAlerter ...
+
+    >>> print agent.db
+    {'agents': {'test.example.com': 1418134302.774271},
+     'faults': {'test.example.com': [{'message':
+                                      'Failed to send alert information (3/3)',
+                                      'name': 'test.example.com#alerts',
+                                      'severity': 50}]}}
+
+
 Loading state on startup
 ========================
 
@@ -382,3 +468,5 @@ If we perform a chech that succeeds, the previous fault will be resolved:
     ...     f.write('test')
     >>> agent.perform(0)
     OutputAlerter resolve //test.example.com/test/foo.txt
+
+

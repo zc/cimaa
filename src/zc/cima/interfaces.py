@@ -58,19 +58,10 @@ class IDB(zope.interface.Interface):
 
 class IAlerter(zope.interface.Interface):
     """Interface for triggering and resolving alerts.
-
-    The methods return joinables (e.g. greenlets), which jave a ``join``
-    method and ``value`` and ``exception`` attributes as defined by greenlets.
     """
 
     def trigger(name, message):
-        """Trigger an alert with the given name(/id) and with the given message
-
-        Returns a joinable.
-        """
+        "Trigger an alert with the given name(/id) and with the given message"
 
     def resolve(self, name):
-        """Resolve an alert with the given name(/id)
-
-        Returns a joinable.
-        """
+        "Resolve an alert with the given name(/id)"
