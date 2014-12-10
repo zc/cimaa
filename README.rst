@@ -12,7 +12,7 @@ characteristics were very important to us:
 - Simplicity
 
   We wanted a solution that was easy to manage.  Many monitoring
-  systems require maintenance of infrustructure, like message busses,
+  systems require maintenance of infrastructure, like message busses,
   databases, or special coordinators.
 
 - Distributed
@@ -24,12 +24,12 @@ characteristics were very important to us:
     monitoring.
 
     When an application is deployed to a host, it should be able to
-    easily make local configuration changes.
+    easily implement local monitoring configuration.
 
   - Distributed checks
 
     Checks are spread over hosts being monitored.  A common pitfall
-    with nagios is that a central monitoing host can't keep up with
+    with Nagios is that a central monitoring host can't keep up with
     all of the tests it needs to perform.
 
   - No mother ship. Many distributes systems use a centralized
@@ -38,7 +38,7 @@ characteristics were very important to us:
 
 - Flexibility
 
-  It should be easy to choose monitoring infrustructure to suit your
+  It should be easy to choose monitoring infrastructure to suit your
   environment.
 
 - Nagios (and nagionic) plugin support
@@ -53,7 +53,7 @@ characteristics were very important to us:
 - Application monitoring with Docker support
 
   Monitoring of our applications is as important to us as system
-  monitoring.  A common apporach to this is to provide a monitoring
+  monitoring.  A common approach to this is to provide a monitoring
   interface in running services that can be used to access monitoring
   information. This is especially important when using Docker, because
   it allows a monitoring agent to just access a port exposed by a
@@ -65,11 +65,11 @@ needs.  Maybe we would have found something eventually, but we
 realized that will less effort than it would take to find and
 integrate what we needed, we could build something very simple.
 
-We'd built an in-house system before, which, while satisifying some of
+We'd built an in-house system before, which while satisfying some of
 the requirements above, still fell short and was more complicated than
-what we were confortable maintaining over the long run.  Experience
+what we were comfortable maintaining over the long run.  Experience
 with this system and with Nagios earlier informed out requirements and
-out approach.
+our approach.
 
 Architectural overview
 **********************
@@ -119,8 +119,8 @@ Meta checks
 - Check whether agents are running (using hearbeats) and whether
   notifications are working.
 
-  If notification failues are detected, can notify operations staff
-  over secondary ot tetiary channels.
+  If notification failures are detected, can notify operations staff
+  over secondary or tertiary channels.
 
 - Run as ordinary checks on many or all agents.
 
@@ -132,19 +132,21 @@ avoiding thundering herds.
 Squelches
 =========
 
-- Patterns stored in database to provent notifications of critical
+- Patterns stored in database to prevent notifications of critical
   errors for faults with names matching the patterns.
 
   (Currently, regular expressions, but maybe these should be less
   powerful.)
 
 - Can be used in cases where you only want to alert when there are
-  multiple faults for a service.
+  faults on multiple hosts for a service. In this case, squelch
+  host-specific alerts and implement a meta-monitor that uses data
+  from multiple hosts.
 
 Status
 ******
 
-We're still building this.
+We're still building.
 
 Done
 ====
@@ -170,9 +172,9 @@ To do
 
   - Agent handling of metrics
 
-  - logging backend
+  - logging back-end
 
-  - Kinesis backend
+  - Kinesis back-end
 
   - Faults derived from metric thresholds.
 
