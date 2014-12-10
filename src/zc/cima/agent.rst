@@ -23,10 +23,10 @@ Define a configuration file::
   timeout = 1
 
   [database]
-  class = zc.cima.tests:MemoryDB
+  class = zc.cimaa.tests:MemoryDB
 
   [alerter]
-  class = zc.cima.tests:OutputAlerter
+  class = zc.cimaa.tests:OutputAlerter
 
 .. -> src
 
@@ -79,15 +79,15 @@ retry_interval
 
 Now, let's create an agent:
 
-    >>> import zc.cima.agent
-    >>> agent = zc.cima.agent.Agent('agent.cfg')
+    >>> import zc.cimaa.agent
+    >>> agent = zc.cimaa.agent.Agent('agent.cfg')
 
 We can see it has the check:
 
     >>> [check.name for check in agent.checks]
     ['//test.example.com/test/foo.txt']
 
-Normally, we'd run cima's main program, which creates an agent and
+Normally, we'd run cimaa's main program, which creates an agent and
 calls it's ``loop`` method, which calls ``perform`` in a loop, but for
 now, we'll call ``perform`` method ourselves.
 
@@ -382,7 +382,7 @@ Let's some more checks::
 
 And recreate our agent:
 
-    >>> agent = zc.cima.agent.Agent('agent.cfg')
+    >>> agent = zc.cimaa.agent.Agent('agent.cfg')
 
 We arrange out alerter to fail:
 
@@ -462,13 +462,13 @@ implementation allows us to specify initial faults to test this::
   timeout = 1
 
   [database]
-  class = zc.cima.tests:MemoryDB
+  class = zc.cimaa.tests:MemoryDB
   faults = {"test.example.com": [{"message": "Badness",
                                   "name": "//test.example.com/test/foo.txt",
                                   "severity": 50}]}
 
   [alerter]
-  class = zc.cima.tests:OutputAlerter
+  class = zc.cimaa.tests:OutputAlerter
 
 .. -> src
 
@@ -477,7 +477,7 @@ implementation allows us to specify initial faults to test this::
 
 If we perform a chech that succeeds, the previous fault will be resolved:
 
-    >>> agent = zc.cima.agent.Agent('agent.cfg')
+    >>> agent = zc.cimaa.agent.Agent('agent.cfg')
     >>> with open('foo.txt', 'w') as f:
     ...     f.write('test')
     >>> agent.perform(0)

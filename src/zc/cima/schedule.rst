@@ -26,8 +26,8 @@ Check rules
 The agent calls ``should_run`` on a check, passing in the current
 interval number.  We'll look at this with a particular check:
 
-    >>> import zc.cima.agent
-    >>> check = zc.cima.agent.Check('//test', 'pwd', 5, 3, 2)
+    >>> import zc.cimaa.agent
+    >>> check = zc.cimaa.agent.Check('//test', 'pwd', 5, 3, 2)
 
 The check above runs on 5-minute interval, but, if there are failures,
 it retries every 2 minutes.  Let's look at this as a scenario.
@@ -67,7 +67,7 @@ Let's look at some other schedules.
 
 If the retry interval is 1, then we always should run if there are failures.
 
-    >>> check = zc.cima.agent.Check('//test', 'pwd', 5, 3, 1)
+    >>> check = zc.cimaa.agent.Check('//test', 'pwd', 5, 3, 1)
     >>> runs(0, True)
     >>> runs(1, False)
     >>> runs(2, False)
@@ -81,7 +81,7 @@ If the retry interval is 1, then we always should run if there are failures.
     >>> runs(9, True)
     >>> runs(10, True)
 
-    >>> check = zc.cima.agent.Check('//test', 'pwd', 5, 3, 3)
+    >>> check = zc.cimaa.agent.Check('//test', 'pwd', 5, 3, 3)
     >>> runs(0, True)
     >>> runs(1, False)
     >>> runs(2, False)
@@ -107,7 +107,7 @@ If the retry interval is 1, then we always should run if there are failures.
     >>> runs(19, False)
     >>> runs(20, True)
 
-    >>> check = zc.cima.agent.Check('//test', 'pwd', 5, 3, 5)
+    >>> check = zc.cimaa.agent.Check('//test', 'pwd', 5, 3, 5)
     >>> runs(0, True)
     >>> runs(1, False)
     >>> runs(2, False)
@@ -153,10 +153,10 @@ Let's set up an agent::
   base_interval = .1
 
   [database]
-  class = zc.cima.tests:MemoryDB
+  class = zc.cimaa.tests:MemoryDB
 
   [alerter]
-  class = zc.cima.tests:OutputAlerter
+  class = zc.cimaa.tests:OutputAlerter
 
 .. -> src
 
@@ -182,8 +182,8 @@ Let's configure a basic check::
 
 Create an agent:
 
-    >>> import zc.cima.agent
-    >>> agent = zc.cima.agent.Agent('agent.cfg')
+    >>> import zc.cimaa.agent
+    >>> agent = zc.cimaa.agent.Agent('agent.cfg')
 
 Let's see loop calls perform correctly:
 
@@ -202,7 +202,7 @@ Let's see loop calls perform correctly:
 Putting it together
 ===================
 
-    >>> agent = zc.cima.agent.Agent('agent.cfg')
+    >>> agent = zc.cimaa.agent.Agent('agent.cfg')
 
 It's going to take at most 5 tries to get an error (because the file
 being tested doesn't exists), but it will take a least 6 tries to get
@@ -226,7 +226,7 @@ There's an entry point for running the agent:
 
     >>> import pkg_resources
     >>> main = pkg_resources.load_entry_point(
-    ...     'zc.cima', 'console_scripts', 'agent')
+    ...     'zc.cimaa', 'console_scripts', 'agent')
     >>> main(['agent.cfg', '-n10'])
     OutputAlerter trigger //test.example.com/test/foo.txt
     'foo.txt' doesn't exist

@@ -5,7 +5,7 @@ Note that the agent uses gevent. Plugins should work with gevent as feasible.
 At least for now, no monkey-patching please.
 
 Don't import this modult unless you have zope.interface in the path.
-zc.cima doesn't import this module, nor does it depend on zope.interface.
+zc.cimaa doesn't import this module, nor does it depend on zope.interface.
 """
 
 import zope.interface

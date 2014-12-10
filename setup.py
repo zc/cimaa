@@ -11,7 +11,7 @@
 # FOR A PARTICULAR PURPOSE.
 #
 ##############################################################################
-name, version = 'zc.cima', '0'
+name, version = 'zc.cimaa', '0'
 
 install_requires = ['setuptools', 'gevent']
 extras_require = dict(
@@ -22,9 +22,9 @@ extras_require = dict(
 
 entry_points = """
 [console_scripts]
-agent = zc.cima.agent:main
-setup-dynamodb = zc.cima.dynamodb:setup
-squelch-dynamodb = zc.cima.dynamodb:squelch
+agent = zc.cimaa.agent:main
+setup-dynamodb = zc.cimaa.dynamodb:setup
+squelch-dynamodb = zc.cimaa.dynamodb:squelch
 """
 
 from setuptools import setup

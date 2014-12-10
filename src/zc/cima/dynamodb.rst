@@ -2,17 +2,17 @@ Storing monitoring data in DynamoDB
 ===================================
 
 You can store your monitoring data in dynamodb using the
-``zc.cima.dynamodb`` implementation in your agent configuration::
+``zc.cimaa.dynamodb`` implementation in your agent configuration::
 
   [database]
-  class = zc.cima.dynamodb
+  class = zc.cimaa.dynamodb
   region = us-east-1
 
 Additional configuration options:
 
 prefix
-  A table name prefix, defaulting to ``cima``.  The tables used will
-  have names prefixed with this string and a dot (e.g. ``cima.agents``).
+  A table name prefix, defaulting to ``cimaa``.  The tables used will
+  have names prefixed with this string and a dot (e.g. ``cimaa.agents``).
 
 aws_access_key_id and aws_secret_access_key
   Use these to specify keys in the configuration. If not specified,
@@ -24,7 +24,7 @@ and unsetting squelches.  To use these, we need to set up a configuration
 file::
 
   [database]
-  class = zc.cima.dynamodb
+  class = zc.cimaa.dynamodb
   region = us-east-1
   prefix = test
 
@@ -38,7 +38,7 @@ file::
     ...               )
 
     >>> setup = pkg_resources.load_entry_point(
-    ...     'zc.cima', 'console_scripts', 'setup-dynamodb')
+    ...     'zc.cimaa', 'console_scripts', 'setup-dynamodb')
 
 We call the setup script, passing the name of the configuration file.
 
@@ -47,15 +47,15 @@ We call the setup script, passing the name of the configuration file.
 We'll use the squelch script to add a squelch:
 
     >>> squelch = pkg_resources.load_entry_point(
-    ...      'zc.cima', 'console_scripts', 'squelch-dynamodb')
+    ...      'zc.cimaa', 'console_scripts', 'squelch-dynamodb')
     >>> import mock
     >>> with mock.patch('getpass.getuser', return_value='tester'):
     ...     squelch(['conf', 'test', 'testing'])
 
 Let's set up a database object.
 
-    >>> import zc.cima.dynamodb
-    >>> db = zc.cima.dynamodb.DB(zc.cima.dynamodb.config_parse('conf'))
+    >>> import zc.cimaa.dynamodb
+    >>> db = zc.cimaa.dynamodb.DB(zc.cimaa.dynamodb.config_parse('conf'))
 
 And perform some operations:
 
@@ -130,5 +130,5 @@ to find old agents:
 
 Cleanup:
 
-    >>> for table in zc.cima.dynamodb.schemas:
+    >>> for table in zc.cimaa.dynamodb.schemas:
     ...     _ = getattr(db, table).delete()
