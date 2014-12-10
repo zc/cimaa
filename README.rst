@@ -122,6 +122,8 @@ Meta checks
   If notification failures are detected, can notify operations staff
   over secondary or tertiary channels.
 
+  Alert if global squelch has been in place too long.
+
 - Run as ordinary checks on many or all agents.
 
 - Avoids need for mother ship.
@@ -168,6 +170,10 @@ Done
 To do
 =====
 
+- Web front end to view current faults and squelches and to manage squelches.
+
+- Meta checks
+
 - Metric support
 
   - Agent handling of metrics
@@ -180,13 +186,12 @@ To do
 
 - Network checks
 
-- Meta checks
-
 - Production use
 
 - Packaging
 
 - Maybe database configuration of checks to be performed everywhere.
+
 
 Changes
 *******
