@@ -114,6 +114,12 @@ def setUp(test):
     setupstack.context_manager(
         test, mock.patch('socket.getfqdn', return_value='test.example.com'))
 
+    setupstack.context_manager(test, mock.patch('logging.basicConfig'))
+    setupstack.context_manager(test, mock.patch('logging.getLogger'))
+    setupstack.context_manager(
+        test, mock.patch('raven.handlers.logging.SentryHandler'))
+    setupstack.context_manager(test, mock.patch('ZConfig.configureLoggers'))
+
 def test_suite():
     optionflags = doctest.NORMALIZE_WHITESPACE | doctest.ELLIPSIS
     time_pat = r"\d+(\.\d*)?"

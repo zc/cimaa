@@ -20,11 +20,25 @@ class Agent:
         parser = ConfigParser.RawConfigParser()
         parser.read(config)
         options = dict(parser.items('agent'))
+
+        logging_config = options.get('logging', 'INFO')
+        if '<logger>' in logging_config:
+            import ZConfig
+            ZConfig.configureLoggers(logging_config)
+        else:
+            logging.basicConfig(level=logging_config.upper())
+
+        sentry_dsn = options.get('sentry_dsn')
+        if sentry_dsn:
+            import raven.handlers.logging
+            logging.getLogger().addHandler(
+                raven.handlers.logging.SentryHandler(sentry_dsn))
+
         aname = self.name = options.get('name', socket.getfqdn())
         self.base_interval = float(options.get('base_interval', 60.0))
         self.timeout = float(options.get('timeout', self.base_interval * .7))
-        self.alert_timeout = float(options.get('timeout',
-                                               self.base_interval * .1))
+        self.alert_timeout = float(options.get('alert_timeout',
+                                               self.base_interval * .2))
 
         self.db = load_handler(parser, 'database')
 
