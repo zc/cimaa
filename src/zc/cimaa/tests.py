@@ -137,6 +137,7 @@ def test_suite():
             'agent.rst',
             'schedule.rst',
             setUp=setUp, tearDown=setupstack.tearDown),
+        doctest.DocTestSuite('zc.cimaa.nagiosperf', optionflags=optionflags),
         ))
     if 'DYNAMO_TEST' in os.environ:
         suite.addTest(
