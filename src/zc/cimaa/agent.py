@@ -10,6 +10,7 @@ import socket
 import sys
 import time
 
+import zc.cimaa.nagiosperf
 import zc.cimaa.threshold
 
 logger = logging.getLogger(__name__)
@@ -184,7 +185,6 @@ class Check:
 
     failures = 0
     last_check = 0
-
     def __init__(self, name, config):
         self.name = name
         self.command = config['command']
@@ -195,6 +195,8 @@ class Check:
         if 'thresholds' in config:
             self.thresholds = zc.cimaa.threshold.Thresholds(
                 config['thresholds'])
+        self.parse_nagios = (
+            config.get('nagios_performance', '').lower() == 'true')
 
     def should_run(self, minute):
         interval = self.interval
@@ -248,7 +250,9 @@ class Check:
                 if stderr:
                     faults.append(monitor_error("stderr", stderr))
 
-                stdout = stdout or stderr
+                if self.parse_nagios and stdout:
+                    stdout, result['metrics'] = (
+                        zc.cimaa.nagiosperf.parse_output(stdout))
                 if not stdout:
                     faults.append(monitor_error("no-out"))
                     stdout = "(no output)"

@@ -128,3 +128,66 @@ Now, if we do checks:
                            'name': '//test.example.com/test/foo.txt#speed',
                            'severity': 40,...
 
+Nagios performance data
+=======================
+
+Nagios plugins can include performance data in their output::
+
+    DISK OK - free space: / 3326 MB (56%); | /=2643MB;5948;5958;0;5968
+    / 15272 MB (77%);
+    /boot 68 MB (69%);
+    /home 69357 MB (27%);
+    /var/log 819 MB (84%); | /boot=68MB;88;93;0;98
+    /home=69357MB;253404;253409;0;253414
+    /var/log=818MB;970;975;0;980
+    speed=0 loudness=0
+
+.. -> src
+
+   >>> with open('foo.txt', 'w') as f:
+   ...     f.write(src)
+
+Normally, performance data is ignored:
+
+    >>> agent.perform(0)
+    >>> print agent.db
+    {'test.example.com': [{'message': 'Missing metric (2 of 4)',
+                           'name': '//test.example.com/test/foo.txt#speed',
+                           'severity': 40,
+                           'since': 1418487287.82,
+                           'updated': 1418487287.82},
+                          {'message': 'Missing metric (2 of 4)',
+                           'name': '//test.example.com/test/foo.txt#loudness',
+                           'severity': 40,
+                           'since': 1418487287.82,
+                           'updated': 1418487287.82}]}
+
+If we want parsing of performance data, we need to use the
+``nagios_performance`` option in the check definition:
+::
+
+  [foo.txt]
+  command = PY filecheck.py foo.txt
+  nagios_performance = true
+  thresholds =
+    speed warning > 50 error > 70 critical > 110 clear < 60
+    loudness warning > 11 error > 20
+    free ? warning <= 20 error <= 10 critical <= 3
+
+.. -> src
+
+    >>> with open(os.path.join('agent.d', 'test.cfg'), 'w') as f:
+    ...     f.write(src.replace('PY', sys.executable))
+    >>> agent = zc.cimaa.agent.Agent('agent.cfg')
+
+::
+
+    >>> agent.perform(0)
+    2014-12-13T16:14:47.820000 //test.example.com/test/foo.txt#/ 2643.0 MB
+    2014-12-13T16:14:47.820000 //test.example.com/test/foo.txt#/boot 68.0 MB
+    2014-12-13T16:14:47.820000 //test.example.com/test/foo.txt#/home 69357.0 MB
+    2014-12-13T16:14:47.820000 //test.example.com/test/foo.txt#/var/log 818.0 MB
+    2014-12-13T16:14:47.820000 //test.example.com/test/foo.txt#speed 0.0
+    2014-12-13T16:14:47.820000 //test.example.com/test/foo.txt#loudness 0.0
+    >>> print agent.db
+    {'test.example.com': []}
