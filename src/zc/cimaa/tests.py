@@ -100,13 +100,21 @@ class OutputAlerter(Logging):
         self.fail()
         self.log('resolve', name)
 
+def OutputMetrics(config):
+    def output_metrics(timestamp, name, value, units=''):
+        print timestamp, name, value, units
+    return output_metrics
 
-def setUp(test):
-    setupstack.setUpDirectory(test)
+def setUpPP(test):
     test.globs.update(
         pdb = pdb,
         pprint = pprint.pprint,
+        pp = pprint.pprint,
         )
+
+def setUp(test):
+    setUpPP(test)
+    setupstack.setUpDirectory(test)
     with open(os.path.join(os.path.dirname(__file__), 'filecheck_py')) as src:
         with open('filecheck.py', 'w') as dest:
             dest.write(src.read())
@@ -119,6 +127,14 @@ def setUp(test):
     setupstack.context_manager(
         test, mock.patch('raven.handlers.logging.SentryHandler'))
     setupstack.context_manager(test, mock.patch('ZConfig.configureLoggers'))
+
+def setUpTime(test):
+    setUp(test)
+    globs = test.globs
+    globs['now'] = 1418487287.82
+    setupstack.context_manager(
+        test, mock.patch('time.time', side_effect=lambda: globs['now']))
+
 
 def test_suite():
     optionflags = doctest.NORMALIZE_WHITESPACE | doctest.ELLIPSIS
@@ -134,10 +150,18 @@ def test_suite():
                     (re.compile(r"'updated': "+time_pat), 'UPDATED'),
                     ])
                 ) + manuel.capture.Manuel(),
-            'agent.rst',
-            'schedule.rst',
+            'agent.rst', 'schedule.rst',
             setUp=setUp, tearDown=setupstack.tearDown),
+        manuel.testing.TestSuite(
+            manuel.doctest.Manuel(
+                optionflags=optionflags,
+                ) + manuel.capture.Manuel(),
+            'metrics.rst',
+            setUp=setUpTime, tearDown=setupstack.tearDown),
         doctest.DocTestSuite('zc.cimaa.nagiosperf', optionflags=optionflags),
+        doctest.DocTestSuite(
+            'zc.cimaa.threshold', optionflags=optionflags,
+            setUp=setUpPP),
         ))
     if 'DYNAMO_TEST' in os.environ:
         suite.addTest(
