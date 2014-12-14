@@ -18,7 +18,7 @@ r"""Parser for nagios performance data
     ... /boot 68 MB (69%);
     ... /home 69357 MB (27%);
     ... /var/log 819 MB (84%); | /boot=68MB;88;93;0;98
-    ... /home=69357MB;253404;253409;0;253414 
+    ... /home=69357MB;253404;253409;0;253414
     ... /var/log=818MB;970;975;0;980''')
     ('DISK OK - free space: / 3326 MB (56%);
        \n/ 15272 MB (77%);\n/boot 68 MB (69%);\n/home 69357 MB
