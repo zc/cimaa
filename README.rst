@@ -163,6 +163,10 @@ Done
 
   - alerts
 
+  - metrics outout
+
+  - metric-threshold checks
+
 - DynamoDB database implementation
 
 - PagerDuty alerter implementation.
@@ -176,13 +180,9 @@ To do
 
 - Metric support
 
-  - Agent handling of metrics
-
   - logging back-end
 
   - Kinesis back-end
-
-  - Faults derived from metric thresholds.
 
 - Network checks
 
