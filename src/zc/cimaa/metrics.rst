@@ -2,6 +2,8 @@
 Metrics support
 ===============
 
+.. contents::
+
 Metrics are used in 2 ways in cimaa:
 
 1. Generate/clear faults when certain metrics exceed thresholds and
@@ -191,3 +193,34 @@ If we want parsing of performance data, we need to use the
     2014-12-13T16:14:47.820000 //test.example.com/test/foo.txt#loudness 0.0
     >>> print agent.db
     {'test.example.com': []}
+
+Logging metriocs handler
+========================
+
+
+To output metrics data to a Python logger, use the
+``zc.cimaa.logmetrics`` metrics handler::
+
+  [metrics]
+  class = zc.cimaa.logmetrics.LogMetrics
+
+.. test
+
+    >>> import zc.cimaa.logmetrics, mock, json, pprint
+    >>> with mock.patch('logging.getLogger') as getLogger:
+    ...     handler = zc.cimaa.logmetrics.LogMetrics({})
+    ...     getLogger.assert_called_with('metrics')
+    ...     with mock.patch('json.dumps', side_effect=pprint.pformat):
+    ...         handler('2014-12-14T17:03:26', 'speed', 42, 'dots')
+    ...     print getLogger.return_value.info.call_args
+    call("{'name': 'speed',\n 'timestamp': '2014-12-14T17:03:26',\n
+           'units': 'dots',\n 'value': 42}")
+
+By default, a logger named "metrics" is used, but you can supply a
+different logger name with the name option.
+
+.. test
+
+  >>> with mock.patch('logging.getLogger') as getLogger:
+  ...     handler = zc.cimaa.logmetrics.LogMetrics(dict(name='test'))
+  ...     getLogger.assert_called_with('test')
