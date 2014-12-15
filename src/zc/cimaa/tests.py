@@ -12,7 +12,6 @@
 #
 ##############################################################################
 from zope.testing import renormalizing, setupstack
-import ConfigParser
 import doctest
 import gevent
 import json
