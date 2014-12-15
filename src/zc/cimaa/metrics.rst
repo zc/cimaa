@@ -194,9 +194,8 @@ If we want parsing of performance data, we need to use the
     >>> print agent.db
     {'test.example.com': []}
 
-Logging metriocs handler
+Logging metrics handler
 ========================
-
 
 To output metrics data to a Python logger, use the
 ``zc.cimaa.logmetrics`` metrics handler::
@@ -224,3 +223,70 @@ different logger name with the name option.
   >>> with mock.patch('logging.getLogger') as getLogger:
   ...     handler = zc.cimaa.logmetrics.LogMetrics(dict(name='test'))
   ...     getLogger.assert_called_with('test')
+
+Amazon Kinesis metrics handler
+==============================
+
+To send metrics data to Kinesis, use the ``zc.cimaa.kinesis``
+metrics handler::
+
+  [metrics]
+  class = zc.cimaa.kinesis.Metrics
+  region = us-east-1
+  stream = test
+
+.. -> src
+
+    >>> import zc.cimaa.parser, zc.cimaa.kinesis
+    >>> config = zc.cimaa.parser.parse_text(src)['metrics']
+    >>> with mock.patch('boto.kinesis.connect_to_region') as connect:
+    ...     handler = zc.cimaa.kinesis.Metrics(config)
+    ...     connect.assert_called_with('us-east-1')
+    ...     put = connect.return_value.put_record
+    ...     put.return_value = dict(SequenceNumber='cn')
+    ...     with mock.patch('json.dumps', side_effect=pprint.pformat):
+    ...         handler('2014-12-14T17:03:26', 'speed', 42, 'dots')
+    ...     print put.call_args
+    ...     with mock.patch('json.dumps', side_effect=pprint.pformat):
+    ...         handler('2014-12-14T17:03:26', 'speed', 42, 'dots')
+    ...     print put.call_args
+    call('test',
+    "{'name': 'speed',\n 'timestamp': '2014-12-14T17:03:26',\n
+    'units': 'dots',\n 'value': 42}",
+    'speed', None, None)
+    call('test',
+    "{'name': 'speed',\n 'timestamp': '2014-12-14T17:03:26',\n
+    'units': 'dots',\n 'value': 42}",
+    'speed', None, 'cn')
+
+In addition to the required ``region``, and ``stream`` settings, you
+can supply a partition key or an explicit hash key as described in the
+Amazon and boto documentation::
+
+  [metrics]
+  class = zc.cimaa.kinesis.Metrics
+  region = us-east-1
+  stream = test
+  partition_key = 42
+  explicit_hash_key = 0
+
+.. -> src
+
+    >>> import zc.cimaa.parser
+    >>> config = zc.cimaa.parser.parse_text(src)['metrics']
+    >>> with mock.patch('boto.kinesis.connect_to_region') as connect:
+    ...     handler = zc.cimaa.kinesis.Metrics(config)
+    ...     connect.assert_called_with('us-east-1')
+    ...     put = connect.return_value.put_record
+    ...     put.return_value = dict(SequenceNumber='cn')
+    ...     with mock.patch('json.dumps', side_effect=pprint.pformat):
+    ...         handler('2014-12-14T17:03:26', 'speed', 42, 'dots')
+    ...     print put.call_args
+    call('test',
+    "{'name': 'speed',\n 'timestamp': '2014-12-14T17:03:26',\n
+    'units': 'dots',\n 'value': 42}", '42', '0', None)
+
+These really only matter if you have more than one shard and want to
+control which shard is used. By default, metric names are used as
+partition keys, which will distribute metrics accross shards, but
+arrange that the data for a single metric are in the same shard.
