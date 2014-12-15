@@ -82,6 +82,11 @@ Now, let's create an agent:
     >>> import zc.cimaa.agent
     >>> agent = zc.cimaa.agent.Agent('agent.cfg')
 
+.. check default logging
+
+   >>> import logging
+   >>> logging.basicConfig.assert_called_with(level='INFO')
+
 We can see it has the check:
 
     >>> [check.name for check in agent.checks]
@@ -493,3 +498,97 @@ agents update faults.  They expose an old_agents method:
     []
     >>> pprint(agent.db.old_agents(0))
     [{'name': 'test.example.com', 'updated': 1418152356.978025}]
+
+Other configuration options
+===========================
+
+The agent section supports other configuration options:
+
+name
+  The name of the agent, defaulting to the host name, as returned
+  by ``socket.getfqdn()``.
+
+  The name must uniquely identify an agent within it's database.
+
+base_interval
+  The time interval at which the agent operates, defaulting to 60
+  seconds.  Check intervals are multiple of this base inyerval.
+
+timeout
+  The check timeout, defaulting to 70% of the base interval.  Checks
+  that fail to complete in this length of time fail.
+
+alert_timeout
+  The alert timeout, defaulting to 20% of the base interval.  An alert
+  is generated if triggering or clearing alerts takes more than this
+  time period.
+
+logging
+  The agent logging configuration, defaulting to INFO.
+
+  This can be either a logging level name, like INFO or WARNING, or a
+  ZConfig logging-configuration string (if the agent was built with
+  the zconfig extra).
+
+sentry_dsn
+  A sentry DSN. If set (and if the agent was build with the sentry
+  extra), agent errors are sent to Sentry.
+
+For example::
+
+  [agent]
+  directory = agent.d
+  name = test.cimaa.org
+  base_interval = 30
+  logging = warning
+  sentry_dsn = http://public:secret@example.com/1
+
+  [database]
+  class = zc.cimaa.tests:MemoryDB
+
+  [alerter]
+  class = zc.cimaa.tests:OutputAlerter
+
+.. -> src
+
+   >>> with open('agent.cfg', 'w') as f:
+   ...     f.write(src)
+   >>> agent = zc.cimaa.agent.Agent('agent.cfg')
+   >>> logging.basicConfig.assert_called_with(level='WARNING')
+   >>> import raven.handlers.logging
+   >>> raven.handlers.logging.SentryHandler.assert_called_with(
+   ...     'http://public:secret@example.com/1')
+   >>> logging.getLogger.return_value.addHandler.assert_called_with(
+   ...     raven.handlers.logging.SentryHandler.return_value)
+   >>> agent.timeout, agent.alert_timeout
+   (21.0, 6.0)
+   >>> agent.name
+   'test.cimaa.org'
+
+Or::
+
+
+  [agent]
+  directory = agent.d
+  alert_timeout = 42
+  logging =
+    <logger>
+    </logger>
+
+  [database]
+  class = zc.cimaa.tests:MemoryDB
+
+  [alerter]
+  class = zc.cimaa.tests:OutputAlerter
+
+.. -> src
+
+   >>> with open('agent.cfg', 'w') as f:
+   ...     f.write(src)
+   >>> logging.basicConfig.reset_mock()
+   >>> agent = zc.cimaa.agent.Agent('agent.cfg')
+   >>> agent.alert_timeout
+   42.0
+   >>> _ = logging.basicConfig.assert_not_called()
+   >>> import ZConfig
+   >>> ZConfig.configureLoggers.assert_called_with('\n<logger>\n</logger>')

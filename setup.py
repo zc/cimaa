@@ -15,10 +15,16 @@ name, version = 'zc.cimaa', '0'
 
 install_requires = ['setuptools', 'gevent']
 extras_require = dict(
-    test=['manuel', 'mock', 'zope.testing'],
-    dynamodb=['boto', 'keyring'],
-    pagerduty=['grequests'],
+    test      = ['manuel', 'mock', 'zope.testing'],
+    dynamodb  = ['boto', 'keyring'],
+    pagerduty = ['grequests'],
+    sentry    = ['raven'],
+    zconfig   = ['zconfig'],
     )
+extras_require['all'] = reduce((lambda a, b: a + b),
+                               (i[1] for i in extras_require.items()
+                                if i[0] != 'test'))
+extras_require['test'] += extras_require['all']
 
 entry_points = """
 [console_scripts]
