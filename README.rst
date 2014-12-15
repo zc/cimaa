@@ -163,9 +163,15 @@ Done
 
   - alerts
 
-  - metrics outout
+  - Metric support
 
-  - metric-threshold checks
+    - metrics outout
+
+    - metric-threshold checks
+
+    - logging back-end
+
+    - Kinesis back-end
 
 - DynamoDB database implementation
 
@@ -177,12 +183,6 @@ To do
 - Web front end to view current faults and squelches and to manage squelches.
 
 - Meta checks
-
-- Metric support
-
-  - logging back-end
-
-  - Kinesis back-end
 
 - Network checks
 
