@@ -22,7 +22,7 @@ class Agent:
 
     def __init__(self, config):
         config = zc.cimaa.parser.parse_file(config)
-        options = config.get('agent', {})
+        options = config['agent']
 
         logging_config = options.get('logging', 'INFO')
         if '<logger>' in logging_config:
