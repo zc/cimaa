@@ -86,7 +86,7 @@ Thresholds
 
 We can check for allowable values of metrics by setting thresholds.
 
-Let's add thresholds to out check definition::
+Let's add thresholds to our check definition::
 
   [foo.txt]
   command = PY filecheck.py foo.txt
@@ -101,7 +101,7 @@ Let's add thresholds to out check definition::
     ...     f.write(src.replace('PY', sys.executable))
     >>> agent = zc.cimaa.agent.Agent('agent.cfg')
 
-Thresholds are specificied with the thresholds option.  The option has
+Thresholds are specified with the thresholds option.  The option has
 0 or more thresholds separated by newlines.  Each threshold has a
 name, and optional optional flag, and one or more parts, with each
 part specifying a fault level, a criteria consisting of a comparison
@@ -286,7 +286,7 @@ Amazon and boto documentation::
     "{'name': 'speed',\n 'timestamp': '2014-12-14T17:03:26',\n
     'units': 'dots',\n 'value': 42}", '42', '0', None)
 
-These really only matter if you have more than one shard and want to
-control which shard is used. By default, metric names are used as
+These really only matters if you have more than one shard and want to
+control which shard is used.  By default, metric names are used as
 partition keys, which will distribute metrics accross shards, but
 arrange that the data for a single metric are in the same shard.

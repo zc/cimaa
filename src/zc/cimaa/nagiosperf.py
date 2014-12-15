@@ -63,4 +63,3 @@ def parse_output(text):
         [dict(name=m[0], value=float(m[1]), units=m[3])
          for m in perf_parse(perf)],
         )
-

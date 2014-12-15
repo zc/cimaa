@@ -1,6 +1,6 @@
 """Threshold handling
 
-Required thresholds fault id no metric:
+Required thresholds fault if no metric:
 
     >>> r = Threshold(
     ...     'foo critical > 200 warning > 50 error > 99 clear < 80').check
