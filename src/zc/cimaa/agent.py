@@ -1,4 +1,3 @@
-import ConfigParser
 import argparse
 import datetime
 import gevent.subprocess
@@ -11,6 +10,7 @@ import sys
 import time
 
 import zc.cimaa.nagiosperf
+import zc.cimaa.parser
 import zc.cimaa.threshold
 
 logger = logging.getLogger(__name__)
@@ -21,9 +21,8 @@ status_codes = [
 class Agent:
 
     def __init__(self, config):
-        parser = ConfigParser.RawConfigParser()
-        parser.read(config)
-        options = dict(parser.items('agent'))
+        config = zc.cimaa.parser.parse_file(config)
+        options = config.get('agent', {})
 
         logging_config = options.get('logging', 'INFO')
         if '<logger>' in logging_config:
@@ -44,10 +43,10 @@ class Agent:
         self.alert_timeout = float(options.get('alert_timeout',
                                                self.base_interval * .2))
 
-        self.db = load_handler(parser, 'database')
-        self.alerter = load_handler(parser, 'alerter')
-        if parser.has_section('metrics'):
-            self.metric = load_handler(parser, 'metrics')
+        self.db = load_handler(config['database'])
+        self.alerter = load_handler(config['alerter'])
+        if 'metrics' in config:
+            self.metric = load_handler(config['metrics'])
 
         self._set_critical(self.db.get_faults(self.name))
 
@@ -55,11 +54,11 @@ class Agent:
         self.checks = checks = []
         for name in os.listdir(directory):
             if name.endswith('.cfg'):
-                cparser = ConfigParser.RawConfigParser()
-                cparser.read(os.path.join(directory, name))
+                cparser = zc.cimaa.parser.parse_file(
+                    os.path.join(directory, name))
                 fname = name[:-4]
-                for section in cparser.sections():
-                    config = dict(cparser.items(section))
+                for section in cparser:
+                    config = dict(cparser[section])
                     if not section.startswith('//'):
                         section = '//%s/%s/%s' % (aname, fname, section)
                     checks.append(Check(section, config))
@@ -318,8 +317,7 @@ def monitor_error(name, message='', prefix='', severity=logging.ERROR):
         updated=time.time(),
         )
 
-def load_handler(parser, name):
-    config = dict(parser.items(name))
+def load_handler(config):
     mod, name = config['class'].split(':')
     mod = __import__(mod, {}, {}, [name])
     return getattr(mod, name)(config)

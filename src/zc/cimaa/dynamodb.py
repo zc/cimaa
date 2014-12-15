@@ -105,10 +105,8 @@ def connect(config):
     return conn, prefix
 
 def config_parse(filename):
-    import ConfigParser
-    parser = ConfigParser.RawConfigParser()
-    parser.read(filename)
-    return dict(parser.items('database'))
+    import zc.cimaa.parser
+    return zc.cimaa.parser.parse_file(filename).get('database', {})
 
 def setup(args=None):
     if args is None:
