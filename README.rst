@@ -163,6 +163,16 @@ Done
 
   - alerts
 
+  - Metric support
+
+    - metrics outout
+
+    - metric-threshold checks
+
+    - logging back-end
+
+    - Kinesis back-end
+
 - DynamoDB database implementation
 
 - PagerDuty alerter implementation.
@@ -173,16 +183,6 @@ To do
 - Web front end to view current faults and squelches and to manage squelches.
 
 - Meta checks
-
-- Metric support
-
-  - Agent handling of metrics
-
-  - logging back-end
-
-  - Kinesis back-end
-
-  - Faults derived from metric thresholds.
 
 - Network checks
 

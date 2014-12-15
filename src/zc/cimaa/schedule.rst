@@ -27,7 +27,8 @@ The agent calls ``should_run`` on a check, passing in the current
 interval number.  We'll look at this with a particular check:
 
     >>> import zc.cimaa.agent
-    >>> check = zc.cimaa.agent.Check('//test', 'pwd', 5, 3, 2)
+    >>> check = zc.cimaa.agent.Check(
+    ...     '//test', dict(command='pwd', interval='5', retry_interval='2'))
 
 The check above runs on 5-minute interval, but, if there are failures,
 it retries every 2 minutes.  Let's look at this as a scenario.
@@ -67,7 +68,8 @@ Let's look at some other schedules.
 
 If the retry interval is 1, then we always should run if there are failures.
 
-    >>> check = zc.cimaa.agent.Check('//test', 'pwd', 5, 3, 1)
+    >>> check = zc.cimaa.agent.Check(
+    ...     '//test', dict(command='pwd', interval='5'))
     >>> runs(0, True)
     >>> runs(1, False)
     >>> runs(2, False)
@@ -81,7 +83,8 @@ If the retry interval is 1, then we always should run if there are failures.
     >>> runs(9, True)
     >>> runs(10, True)
 
-    >>> check = zc.cimaa.agent.Check('//test', 'pwd', 5, 3, 3)
+    >>> check = zc.cimaa.agent.Check(
+    ...     '//test', dict(command='pwd', interval='5', retry_interval='3'))
     >>> runs(0, True)
     >>> runs(1, False)
     >>> runs(2, False)
@@ -107,7 +110,8 @@ If the retry interval is 1, then we always should run if there are failures.
     >>> runs(19, False)
     >>> runs(20, True)
 
-    >>> check = zc.cimaa.agent.Check('//test', 'pwd', 5, 3, 5)
+    >>> check = zc.cimaa.agent.Check(
+    ...     '//test', dict(command='pwd', interval='5', retry_interval='5'))
     >>> runs(0, True)
     >>> runs(1, False)
     >>> runs(2, False)

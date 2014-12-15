@@ -11,7 +11,7 @@ if os.path.isfile(name):
     sys.exit(1)
   if data == 'noout':
     sys.exit(0)
-  if data[0] == '{':
+  if data[0] == '{' or data.startswith('DISK OK'):
     print data
     sys.exit(0)
 

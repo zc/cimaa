@@ -80,3 +80,10 @@ class IAlerter(zope.interface.Interface):
 
     def resolve(self, name):
         "Resolve an alert with the given name(/id)"
+
+class IMetrics(zope.interface.Interface):
+    """Interface for handling metrics data
+    """
+
+    def __call__(timestamp, name, value, units=''):
+        "Handle a single metric value"

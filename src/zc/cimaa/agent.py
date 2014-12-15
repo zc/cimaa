@@ -1,5 +1,6 @@
 import ConfigParser
 import argparse
+import datetime
 import gevent.subprocess
 import json
 import logging
@@ -8,6 +9,9 @@ import re
 import socket
 import sys
 import time
+
+import zc.cimaa.nagiosperf
+import zc.cimaa.threshold
 
 logger = logging.getLogger(__name__)
 
@@ -41,8 +45,9 @@ class Agent:
                                                self.base_interval * .2))
 
         self.db = load_handler(parser, 'database')
-
-        alerter = self.alerter = load_handler(parser, 'alerter')
+        self.alerter = load_handler(parser, 'alerter')
+        if parser.has_section('metrics'):
+            self.metric = load_handler(parser, 'metrics')
 
         self._set_critical(self.db.get_faults(self.name))
 
@@ -55,14 +60,9 @@ class Agent:
                 fname = name[:-4]
                 for section in cparser.sections():
                     config = dict(cparser.items(section))
-                    interval = int(config.pop('interval', 1))
-                    retry_interval = int(config.pop('retry_interval', 1))
-                    retry = int(config.pop('retry', 3))
-                    command = config['command']
                     if not section.startswith('//'):
                         section = '//%s/%s/%s' % (aname, fname, section)
-                    checks.append(Check(section, command,
-                                        interval, retry, retry_interval))
+                    checks.append(Check(section, config))
 
     def _set_critical(self, faults):
         self.critical = dict(
@@ -119,6 +119,9 @@ class Agent:
                             f['triggered'] = 'y'
                         else:
                             alerts.append(self.trigger(f))
+            for m in cresults.get("metrics", ()):
+                m['name'] = check.name + '#' + m['name']
+                self.metric(**m)
 
         for name in self.critical:
             if name not in critical and name.split('#')[0] in checked:
@@ -175,18 +178,25 @@ class Agent:
             self.perform(itick + 1)
             count -= 1
 
+    def metric(self, name, value, units, timestamp):
+        pass
+
 class Check:
 
     failures = 0
     last_check = 0
-
-    def __init__(self, name, command, interval, retry, retry_interval):
+    def __init__(self, name, config):
         self.name = name
-        self.command = command
-        self.interval = interval
-        self.retry = retry
-        self.chances = retry + 1
-        self.retry_interval = retry_interval
+        self.command = config['command']
+        self.interval = int(config.get('interval', 1))
+        self.retry = int(config.get('retry', 3))
+        self.chances = self.retry + 1
+        self.retry_interval = int(config.get('retry_interval', 1))
+        if 'thresholds' in config:
+            self.thresholds = zc.cimaa.threshold.Thresholds(
+                config['thresholds'])
+        self.parse_nagios = (
+            config.get('nagios_performance', '').lower() == 'true')
 
     def should_run(self, minute):
         interval = self.interval
@@ -225,15 +235,14 @@ class Check:
                             f['severity'] = severity_names[
                                 f['severity'].lower()]
                         f['message']
-                        f['updated'] = now
                 except Exception, v:
                     logger.exception("Bad json response for %s", self.name)
                     result = dict(faults=[dict(
                         name='json-error',
                         message = "%s: %s" % (v.__class__.__name__, v),
                         severity = logging.CRITICAL,
-                        updated = now,
                         )])
+                faults = result['faults']
             else:
                 faults = []
                 result = dict(faults=faults)
@@ -241,7 +250,9 @@ class Check:
                 if stderr:
                     faults.append(monitor_error("stderr", stderr))
 
-                stdout = stdout or stderr
+                if self.parse_nagios and stdout:
+                    stdout, result['metrics'] = (
+                        zc.cimaa.nagiosperf.parse_output(stdout))
                 if not stdout:
                     faults.append(monitor_error("no-out"))
                     stdout = "(no output)"
@@ -256,8 +267,15 @@ class Check:
                     faults.append(monitor_error("status", stdout))
                     status = logging.CRITICAL
 
-                for f in faults:
-                    f['updated'] = now
+
+            self.thresholds(result)
+            for f in faults:
+                f['updated'] = now
+
+            for m in result.get("metrics", ()):
+                if 'timestamp' not in m:
+                    m['timestamp'] = (
+                        datetime.datetime.utcfromtimestamp(now).isoformat())
 
             # handle soft errors
             errors = [f for f in result.get('faults', ())
@@ -276,13 +294,17 @@ class Check:
 
             return result
         except Exception, v:
+            import traceback; traceback.print_exc()
             logger.exception("Checker failed %s", self.name)
-            result = dict(faults=[dict(
+            return dict(faults=[dict(
                 name='checker',
                 message = "%s: %s" % (v.__class__.__name__, v),
                 severity = logging.CRITICAL,
                 updated = time.time(),
                 )])
+
+    def thresholds(self, result):
+        pass
 
 severity_names = dict(warning=logging.WARNING,
                       error=logging.ERROR,
