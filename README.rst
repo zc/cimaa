@@ -196,6 +196,12 @@ To do
 Changes
 *******
 
+0.1.1 (2014-12-17)
+==================
+
+Fixed log level configuration for Sentry.
+
+
 0.1.0 (2014-12-15)
 ==================
 
