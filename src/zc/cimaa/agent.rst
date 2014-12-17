@@ -558,8 +558,9 @@ For example::
    >>> import raven.handlers.logging
    >>> raven.handlers.logging.SentryHandler.assert_called_with(
    ...     'http://public:secret@example.com/1')
-   >>> logging.getLogger.return_value.addHandler.assert_called_with(
-   ...     raven.handlers.logging.SentryHandler.return_value)
+   >>> handler = raven.handlers.logging.SentryHandler.return_value
+   >>> handler.setLevel.assert_called_with(logging.ERROR)
+   >>> logging.getLogger.return_value.addHandler.assert_called_with(handler)
    >>> agent.timeout, agent.alert_timeout
    (21.0, 6.0)
    >>> agent.name
