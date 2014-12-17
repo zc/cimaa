@@ -34,8 +34,9 @@ class Agent:
         sentry_dsn = options.get('sentry_dsn')
         if sentry_dsn:
             import raven.handlers.logging
-            logging.getLogger().addHandler(
-                raven.handlers.logging.SentryHandler(sentry_dsn))
+            handler = raven.handlers.logging.SentryHandler(sentry_dsn)
+            handler.setLevel(logging.ERROR)
+            logging.getLogger().addHandler(handler)
 
         aname = self.name = options.get('name', socket.getfqdn())
         self.base_interval = float(options.get('base_interval', 60.0))
