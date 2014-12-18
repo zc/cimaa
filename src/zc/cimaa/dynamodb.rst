@@ -114,7 +114,7 @@ to find old agents:
 
     >>> pprint(db.get_faults('agent'))
     [{u'agent': u'agent',
-      'message': '',
+      u'message': u'',
       u'name': u'blank',
       u'severity': T},
      {u'agent': u'agent',
@@ -143,7 +143,7 @@ has to ensure that it gets restored to avoid KeyErrors::
     ...     ])
     >>> pprint(db.get_faults('agent'))
     [{u'agent': u'agent',
-      'message': '',
+      u'message': u'',
       u'name': u'blank',
       u'severity': Decimal('50')}]
 
