@@ -78,12 +78,16 @@ And perform some operations:
     >>> db.set_faults('agent', [
     ...     dict(name='f3', severity=50, message='f3 is bad', triggered='y'),
     ...     dict(name='f2', severity=40, message='f2 is bad'),
+    ...     dict(name='blank', severity=50, message=''),
     ...     ])
 
     >>> pprint(db.dump())
     {'faults': [{u'agent': u'_',
                  u'name': u'agent',
                  u'updated': Decimal('1418160088.916944026947021484375')},
+                {u'agent': u'agent',
+                 u'name': u'blank',
+                 u'severity': T},
                 {u'agent': u'agent',
                  u'message': u'f2 is bad',
                  u'name': u'f2',
@@ -110,6 +114,10 @@ to find old agents:
 
     >>> pprint(db.get_faults('agent'))
     [{u'agent': u'agent',
+      u'message': u'',
+      u'name': u'blank',
+      u'severity': T},
+     {u'agent': u'agent',
       u'message': u'f2 is bad',
       u'name': u'f2',
       u'severity': Decimal('40')},
@@ -126,6 +134,18 @@ to find old agents:
                  u'name': u'agent',
                  u'updated': Decimal('1418160089.4438440799713134765625')}],
      'squelches': []}
+
+DynamoDB does not return keys for empty string values. The DB implementation
+has to ensure that it gets restored to avoid KeyErrors::
+
+    >>> db.set_faults('agent', [
+    ...     dict(name='blank', severity=50, message=''),
+    ...     ])
+    >>> pprint(db.get_faults('agent'))
+    [{u'agent': u'agent',
+      u'message': u'',
+      u'name': u'blank',
+      u'severity': Decimal('50')}]
 
 
 Cleanup:

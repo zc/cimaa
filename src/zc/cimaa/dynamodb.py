@@ -43,6 +43,10 @@ class DB:
     def get_faults(self, agent):
         faults = [dict(item.items())
                   for item in self.faults.query_2(agent__eq=agent)]
+        # dynamodb doesn't populate keys with empty strings
+        for f in faults:
+            if 'message' not in x:
+                f[u'message'] = u''
         self.last_faults[agent] = set(fault['name'] for fault in faults)
         return faults
 
