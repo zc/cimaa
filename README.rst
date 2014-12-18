@@ -196,6 +196,9 @@ To do
 Changes
 *******
 
+0.1.2 (2014-12-18)
+==================
+
 Restore ``message`` field on fault records returned by DynamoDB, if
 omitted because of empty string value.
 
