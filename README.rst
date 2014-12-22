@@ -196,6 +196,12 @@ To do
 Changes
 *******
 
+0.1.3 (2014-12-22)
+==================
+
+Fix local variable reference in DynamoDB implementation.
+
+
 0.1.2 (2014-12-18)
 ==================
 
