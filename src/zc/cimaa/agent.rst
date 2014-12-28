@@ -286,8 +286,14 @@ If a test takes too long we'll get a timeout fault:
     >>> with open('foo.txt', 'w') as f:
     ...     f.write('sleep')
     >>> agent.perform(0)
-    OutputAlerter trigger //test.example.com/test/foo.txt#monitor-timeout
     OutputAlerter resolve //test.example.com/test/foo.txt#json-error
+
+    >>> print agent.db
+    {'test.example.com': [{'message': '',
+                           'name':
+                           '//test.example.com/test/foo.txt#monitor-timeout',
+                           'severity': 40,
+                           ...
 
 Critical severity alerts immediately, no retry
 ==============================================
@@ -298,7 +304,6 @@ does, then we'll alert immediately.  We don't retry:
     >>> with open('foo.txt', 'w') as f:
     ...     f.write('{"faults": []}')
     >>> agent.perform(0)
-    OutputAlerter resolve //test.example.com/test/foo.txt#monitor-timeout
     >>> with open('foo.txt', 'w') as f:
     ...     f.write('{"faults": [{"message": "Panic!", "severity": 50}]}')
     >>> agent.perform(0)

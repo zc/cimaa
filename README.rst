@@ -177,6 +177,8 @@ Done
 
 - PagerDuty alerter implementation.
 
+- Production use
+
 To do
 =====
 
@@ -186,15 +188,13 @@ To do
 
 - Network checks
 
-- Production use
-
-- Packaging
-
 - Maybe database configuration of checks to be performed everywhere.
-
 
 Changes
 *******
+
+On monitor timeout, error rather than going critical immediately.
+Timeouts can be intermittent and we don't want to alert in this case.
 
 0.1.3 (2014-12-22)
 ==================

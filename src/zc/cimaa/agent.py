@@ -93,9 +93,7 @@ class Agent:
             cresults = checklet.value
             if cresults is None:
                 checklet.kill(block=False)
-                cresults = dict(faults=[
-                    monitor_error('timeout', severity=logging.CRITICAL)
-                    ])
+                cresults = dict(faults=[monitor_error('timeout')])
             for f in cresults.get('faults', ()):
                 if f.get('name', ''):
                     name = check.name + '#' + f['name']
