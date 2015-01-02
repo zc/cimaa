@@ -188,6 +188,8 @@ To do
 
 - Network checks
 
+- Check rules that prevent alerts in sleeping hours for less important checks.
+
 - Maybe database configuration of checks to be performed everywhere.
 
 Changes
