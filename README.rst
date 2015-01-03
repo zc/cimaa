@@ -200,7 +200,7 @@ Changes
 
 - Added a meta-monitor for dead agents and forgotten squelches.
 
-  This required adding a new meythod to the database API.
+  This required adding a new method to the database API.
 
 - Added a ``permanent`` flag for squelches intended to hang around
   indefinitely.  The meta-monitor doesn't complain about permanent
