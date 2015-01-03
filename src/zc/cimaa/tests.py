@@ -67,13 +67,18 @@ class MemoryDB:
         return self.squelches.get(regex)
 
     def get_squelches(self):
-        return list(self.squelches)
+        return sorted(self.squelches)
 
-    def squelch(self, regex, reason, user, now=None):
+    def get_squelch_details(self):
+        return [_squelch_detail(item)
+                for item in sorted(self.squelches.items())]
+
+    def squelch(self, regex, reason, user, permanent=False, now=None):
         self.squelches[regex] = dict(
             reason = reason,
             user = user,
-            time = now or 1417968068.01
+            time = now or 1417968068.01,
+            permanent = permanent,
             )
 
     def unsquelch(self, regex):
@@ -81,6 +86,11 @@ class MemoryDB:
 
     def __str__(self):
         return pprint.pformat(self.faults)
+
+def _squelch_detail(regex, data):
+    data = data.copy()
+    data['regex'] = regex
+    return data
 
 def MetaDB(conf):
     return meta_db
@@ -165,7 +175,7 @@ def test_suite():
                     (re.compile(r"'updated': "+time_pat), 'UPDATED'),
                     ])
                 ) + manuel.capture.Manuel(),
-            'agent.rst', 'schedule.rst', 'meta.rst',
+            'agent.rst', 'meta.rst', 'schedule.rst', 'squelch.rst',
             setUp=setUp, tearDown=setupstack.tearDown),
         manuel.testing.TestSuite(
             manuel.doctest.Manuel(

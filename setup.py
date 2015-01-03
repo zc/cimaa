@@ -31,6 +31,8 @@ entry_points = """
 agent = zc.cimaa.agent:main
 meta-monitor = zc.cimaa.meta:main
 setup-dynamodb = zc.cimaa.dynamodb:setup
+squelch = zc.cimaa.squelch:squelch
+unsquelch = zc.cimaa.squelch:unsquelch
 """
 
 from setuptools import setup
