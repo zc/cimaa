@@ -1,6 +1,7 @@
 # Dynamodb implementation
 
 from boto import dynamodb2
+import boto.dynamodb2.exceptions
 import boto.dynamodb2.fields
 import boto.dynamodb2.table
 import boto.dynamodb2.types
@@ -70,8 +71,16 @@ class DB:
 
         self.last_faults[agent] = set(fault['name'] for fault in faults)
 
+    def get_squelch(self, regex):
+        try:
+            item = self.squelches.lookup(regex)
+        except boto.dynamodb2.exceptions.ItemNotFound:
+            return None
+        return dict(item.items())
+
     def get_squelches(self):
-        return [item['regex'] for item in self.squelches.scan()]
+        return [item['regex']
+                for item in self.squelches.scan(attributes=['regex'])]
 
     def squelch(self, regex, reason, user):
         self.squelches.put_item(dict(regex=regex,

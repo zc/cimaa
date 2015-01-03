@@ -65,6 +65,11 @@ And perform some operations:
 
     >>> db.get_squelches()
     [u'test']
+    >>> pprint(db.get_squelch('test'))
+    {u'reason': u'testing',
+     u'regex': u'test',
+     u'time': Decimal('1420294404.0289080142974853515625'),
+     u'user': u'tester'}
 
     >>> db.set_faults('agent', [
     ...     dict(name='f1', severity=40, message='f1 is bad'),
