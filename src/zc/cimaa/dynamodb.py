@@ -79,13 +79,19 @@ class DB:
         return dict(item.items())
 
     def get_squelches(self):
-        return [item['regex']
-                for item in self.squelches.scan(attributes=['regex'])]
+        return sorted(item['regex']
+                      for item in self.squelches.scan(attributes=['regex'])
+                      )
 
-    def squelch(self, regex, reason, user):
+    def get_squelch_details(self):
+        return sorted((_squelch_data(item) for item in self.squelches.scan()),
+                      key = _squelch_regex)
+
+    def squelch(self, regex, reason, user, permanent=False):
         self.squelches.put_item(dict(regex=regex,
                                      reason=reason,
                                      user=user,
+                                     permanent = 'p' if permanent else '',
                                      time=time.time(),
                                      ))
 
@@ -101,6 +107,14 @@ class DB:
                 (dict(item.items()) for item in self.squelches.scan()),
                 key=lambda item: ['regex']),
             )
+
+def _squelch_data(item):
+    data = dict(item.items())
+    data[u'permanent'] = bool(data.get(u'permanent'))
+    return data
+
+def _squelch_regex(data):
+    return data['regex']
 
 def connect(config):
     if 'aws_access_key_id' in config:
@@ -147,30 +161,3 @@ def create(conn, prefix, name):
 def table(conn, prefix, name):
     return dynamodb2.table.Table(
         prefix + name, connection=conn, **schemas[name])
-
-def squelch(args=None):
-    if args is None:
-        args = sys.argv[1:]
-
-    import argparse, getpass
-    parser = argparse.ArgumentParser(description='Add a squelch.')
-    parser.add_argument('configuration',
-                        help='agent configuration file')
-    parser.add_argument('regex',
-                        help='regular expression to be squelched')
-    parser.add_argument('reason', nargs='?', default=None,
-                        help='The reason for this squelch')
-    parser.add_argument('-r', '--remove', action='store_true',
-                        help='remove, rather than add the squelch')
-    args = parser.parse_args(args)
-    config = config_parse(args.configuration)
-    db = DB(config_parse(args.configuration), tables=('squelches'))
-    conn, prefix = connect(config)
-
-    squelches = table(conn, prefix, 'squelches')
-    if args.remove:
-        db.unsquelch(args.regex)
-    else:
-        if args.reason is None:
-            raise ValueError("A reason must be supplied when adding squelches")
-        db.squelch(args.regex, args.reason, getpass.getuser())
