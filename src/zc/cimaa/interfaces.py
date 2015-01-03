@@ -59,20 +59,20 @@ class IDB(zope.interface.Interface):
         See get_faults for a description of fault data.
         """
 
-    def get_squelch(regex):
-        """Return data for the given regex.
+    def get_squelches(detail):
+        "Return a sequence of squelche regular-expression strings"
 
-        The results is a dictionary with keys: reason, regex, time, and user,
-        or None if there isn't asquelch for the given regex.
-        """
+    def get_squelche_details():
+        "Return a sequence of squelch data"
 
-    def get_squelches():
-        "Return a sequence of squelch regular expressions."
-
-    def squelch(regex, reason, user):
+    def squelch(regex, reason, user, permanent=False):
         """Add a squelch.
 
-        All arguments are strings.
+        The regex, reason and user arguments are strings.
+
+        The permanent argument indicates whether the squelch should be
+        kept indefinately.  A meta monitor will alert is impermanent
+        squelches remain too long (e.g. more than an hours).
         """
 
     def unsquelch(regex):
