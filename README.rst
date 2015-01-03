@@ -177,6 +177,8 @@ Done
 
 - PagerDuty alerter implementation.
 
+- Meta checks for dead agents and forgotten global squelches.
+
 - Production use
 
 To do
@@ -184,13 +186,17 @@ To do
 
 - Web front end to view current faults and squelches and to manage squelches.
 
-- Meta checks
-
 - Network checks
 
 - Check rules that prevent alerts in sleeping hours for less important checks.
 
 - Maybe database configuration of checks to be performed everywhere.
+
+- Maybe additional squelch meta-data to distinguish between temporary
+  and permanent squelches.
+
+- Maybe a backup alert mechanism. We already have this to some extent
+  if sentry is used.
 
 Changes
 *******
