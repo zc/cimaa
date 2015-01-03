@@ -198,9 +198,16 @@ To do
 Changes
 *******
 
-- Added a meta-monitor for dead agents and forgotten global squelches.
+- Added a meta-monitor for dead agents and forgotten squelches.
 
   This required adding a new meythod to the database API.
+
+- Added a ``permanent`` flag for squelches intended to hang around
+  indefinitely.  The meta-monitor doesn't complain about permanent
+  squelches.
+
+- Replaced the dynamodb-specific squelch script with generic squelch
+  and unsquelch scripts.
 
 - On monitor timeout, error rather than going critical immediately.
   Timeouts can be intermittent and we don't want to alert in this case.
