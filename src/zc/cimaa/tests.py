@@ -63,9 +63,6 @@ class MemoryDB:
         self.faults[agent] = faults
         self.agents[agent] = now or time.time()
 
-    def get_squelch(self, regex):
-        return self.squelches.get(regex)
-
     def get_squelches(self):
         return sorted(self.squelches)
 
@@ -87,7 +84,7 @@ class MemoryDB:
     def __str__(self):
         return pprint.pformat(self.faults)
 
-def _squelch_detail(regex, data):
+def _squelch_detail((regex, data)):
     data = data.copy()
     data['regex'] = regex
     return data
