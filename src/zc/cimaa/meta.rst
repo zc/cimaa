@@ -86,19 +86,26 @@ And supply different warning and error levels:
     {"faults": [{"message": "Inactive agent", "name": "a2", "severity": 30},
                 {"message": "Inactive agent", "name": "a3", "severity": 40}]}
 
-Global squelch in place too long
---------------------------------
+Squelch in place too long
+-------------------------
 
 The meta monitor also checks for squelches left in place too long:
 
     >>> zc.cimaa.tests.meta_db.squelch(
-    ...     '.', 'testing', 'tester', time.time() - 3700)
+    ...     '.', 'deploying', 'tester', False, time.time() - 3700)
+    >>> zc.cimaa.tests.meta_db.squelch(
+    ...     'app2[.]example', 'fixing', 'fixer', False, time.time() - 3700)
+    >>> zc.cimaa.tests.meta_db.squelch(
+    ...     '^//stage', 'ignore stages', 'ops', True, time.time() - 3700)
     >>> monitor('-w4 -e10 agent.cfg'.split())
     {"faults": [{"message": "Inactive agent", "name": "a2", "severity": 30},
                 {"message": "Inactive agent", "name": "a3", "severity": 40},
                 {"message":
-                 "Alerts squelched 61 minutes ago by tester because testing",
-                 "name": "global-squelch", "severity": 40}]}
+                 "Alerts squelched 61 minutes ago by tester because deploying",
+                 "name": "squelch-.", "severity": 40},
+                {"message":
+                 "Alerts squelched 61 minutes ago by fixer because fixing",
+                 "name": "squelch-app2%5B.%5Dexample", "severity": 40}]}
 
 We can control how long the global squelch can be in place before
 alerting by specifying an age in minutes:

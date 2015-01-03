@@ -3,6 +3,7 @@ import json
 import logging
 import sys
 import time
+import urllib
 import zc.cimaa.parser
 
 def main(args=None):
@@ -47,12 +48,14 @@ def main(args=None):
             ))
 
     # Check for forgotten global squelch
-    squelch = db.get_squelch('.')
-    if squelch is not None:
+    old_squelches = []
+    for squelch in db.get_squelch_details():
+        if squelch['permanent']:
+            continue
         age = now - squelch['time']
         if age > max_squelch:
             faults.append(dict(
-                name='global-squelch',
+                name='squelch-' + urllib.quote(squelch['regex']),
                 message='Alerts squelched %d minutes ago by %s because %s' % (
                     age / 60, squelch['user'], squelch['reason']),
                 severity = logging.ERROR,
