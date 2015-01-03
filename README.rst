@@ -195,14 +195,17 @@ To do
 Changes
 *******
 
-On monitor timeout, error rather than going critical immediately.
-Timeouts can be intermittent and we don't want to alert in this case.
+- Added a meta-monitor for dead agents and forgotten global squelches.
+
+  This required adding a new meythod to the database API.
+
+- On monitor timeout, error rather than going critical immediately.
+  Timeouts can be intermittent and we don't want to alert in this case.
 
 0.1.3 (2014-12-22)
 ==================
 
 Fix local variable reference in DynamoDB implementation.
-
 
 0.1.2 (2014-12-18)
 ==================
@@ -210,12 +213,10 @@ Fix local variable reference in DynamoDB implementation.
 Restore ``message`` field on fault records returned by DynamoDB, if
 omitted because of empty string value.
 
-
 0.1.1 (2014-12-17)
 ==================
 
 Fixed log level configuration for Sentry.
-
 
 0.1.0 (2014-12-15)
 ==================

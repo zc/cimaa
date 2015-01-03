@@ -29,6 +29,7 @@ extras_require['test'] += extras_require['all']
 entry_points = """
 [console_scripts]
 agent = zc.cimaa.agent:main
+meta-monitor = zc.cimaa.meta:main
 setup-dynamodb = zc.cimaa.dynamodb:setup
 squelch-dynamodb = zc.cimaa.dynamodb:squelch
 """
