@@ -59,6 +59,13 @@ class IDB(zope.interface.Interface):
         See get_faults for a description of fault data.
         """
 
+    def get_squelch(regex):
+        """Return data for the given regex.
+
+        The results is a dictionary with keys: reason, regex, time, and user,
+        or None if there isn't asquelch for the given regex.
+        """
+
     def get_squelches():
         "Return a sequence of squelch regular expressions."
 
