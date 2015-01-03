@@ -7,6 +7,7 @@ import boto.dynamodb2.table
 import boto.dynamodb2.types
 import sys
 import time
+import zc.cimaa.parser
 
 schemas = dict(
     squelches=dict(schema=[dynamodb2.fields.HashKey('regex')]),
@@ -132,8 +133,7 @@ def connect(config):
     return conn, prefix
 
 def config_parse(filename):
-    import zc.cimaa.parser
-    return zc.cimaa.parser.parse_file(filename).get('database', {})
+    return zc.cimaa.parser.parse_file(filename)['database']
 
 def setup(args=None):
     if args is None:
