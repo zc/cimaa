@@ -83,7 +83,16 @@ class IAlerter(zope.interface.Interface):
     """
 
     def trigger(name, message):
-        "Trigger an alert with the given name(/id) and with the given message"
+        """Trigger an alert with the given name(/id) and with the given message
+
+        Note that in the case of globally-performed checks, trigger
+        may be called multiple times, from different agents, for the
+        same name.  It's up to the alerter to avoid messaging humans
+        multiple times because of this. Pager Duty gives us this for
+        free. Other alerters might employ a database to avoid
+        duplicate messages. (Of course, an alerting system might
+        message multiple times as part of an escallation policy.)
+        """
 
     def resolve(self, name):
         "Resolve an alert with the given name(/id)"
