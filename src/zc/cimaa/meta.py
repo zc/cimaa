@@ -44,7 +44,7 @@ def main(args=None):
         faults.append(dict(
             name=agent['name'],
             message='Inactive agent',
-            severity = logging.ERROR if age > error else logging.WARNING,
+            severity=logging.ERROR if age > error else logging.WARNING,
             ))
 
     # Check for forgotten global squelch
@@ -58,7 +58,7 @@ def main(args=None):
                 name='squelch-' + urllib.quote(squelch['regex']),
                 message='Alerts squelched %d minutes ago by %s because %s' % (
                     age / 60, squelch['user'], squelch['reason']),
-                severity = logging.ERROR,
+                severity=logging.ERROR,
                 ))
     print json.dumps(result)
 
