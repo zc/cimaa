@@ -215,7 +215,10 @@ applications. They record the time at which the squelch was set:
 
     >>> agent.db.squelch('test', 'testing', 'me')
     >>> pprint(agent.db.squelches)
-    {'test': {'reason': 'testing', 'time': 1417968068.01, 'user': 'me'}}
+    {'test': {'permanent': False,
+              'reason': 'testing',
+              'time': 1417968068.01,
+              'user': 'me'}}
 
     >>> agent.perform(0)
     >>> agent.perform(0)
