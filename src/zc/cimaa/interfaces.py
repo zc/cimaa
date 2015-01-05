@@ -60,7 +60,7 @@ class IDB(zope.interface.Interface):
         """
 
     def get_squelches(detail):
-        "Return a sequence of squelche regular-expression strings"
+        "Return a sequence of squelch regular-expression strings"
 
     def get_squelch_details():
         "Return a sequence of squelch data"
