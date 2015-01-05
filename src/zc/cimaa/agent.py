@@ -44,10 +44,10 @@ class Agent:
         self.alert_timeout = float(options.get('alert_timeout',
                                                self.base_interval * .2))
 
-        self.db = load_handler(config['database'])
-        self.alerter = load_handler(config['alerter'])
+        self.db = zc.cimaa.parser.load_handler(config['database'])
+        self.alerter = zc.cimaa.parser.load_handler(config['alerter'])
         if 'metrics' in config:
-            self.metric = load_handler(config['metrics'])
+            self.metric = zc.cimaa.parser.load_handler(config['metrics'])
 
         self._set_critical(self.db.get_faults(self.name))
 
@@ -315,11 +315,6 @@ def monitor_error(name, message='', prefix='', severity=logging.ERROR):
         severity=severity,
         updated=time.time(),
         )
-
-def load_handler(config):
-    mod, name = config['class'].split(':')
-    mod = __import__(mod, {}, {}, [name])
-    return getattr(mod, name)(config)
 
 def main(args=None):
     if args is None:

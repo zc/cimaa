@@ -54,23 +54,28 @@ class MemoryDB:
     def get_faults(self, agent):
         return self.faults.get(agent, ())
 
-    def set_faults(self, agent, faults):
+    def set_faults(self, agent, faults, now=None):
         times = dict((f[name], f['since'])
                      for f in self.faults.get('agent', ())
                      if f['name'])
         for f in faults:
             f['since'] = times.get(f['name'], f['updated'])
         self.faults[agent] = faults
-        self.agents[agent] = time.time()
+        self.agents[agent] = now or time.time()
 
     def get_squelches(self):
-        return list(self.squelches)
+        return sorted(self.squelches)
 
-    def squelch(self, regex, reason, user):
+    def get_squelch_details(self):
+        return [_squelch_detail(item)
+                for item in sorted(self.squelches.items())]
+
+    def squelch(self, regex, reason, user, permanent=False, now=None):
         self.squelches[regex] = dict(
             reason = reason,
             user = user,
-            time = 1417968068.01
+            time = now or 1417968068.01,
+            permanent = permanent,
             )
 
     def unsquelch(self, regex):
@@ -78,6 +83,14 @@ class MemoryDB:
 
     def __str__(self):
         return pprint.pformat(self.faults)
+
+def _squelch_detail((regex, data)):
+    data = data.copy()
+    data['regex'] = regex
+    return data
+
+def MetaDB(conf):
+    return meta_db
 
 class OutputAlerter(Logging):
 
@@ -107,6 +120,12 @@ def OutputMetrics(config):
     return output_metrics
 
 def setUpPP(test):
+    from json import dumps as original_dumps
+    setupstack.context_manager(
+        test,
+        mock.patch('json.dumps',
+                   lambda o: original_dumps(o, sort_keys=True))
+        )
     test.globs.update(
         pdb = pdb,
         pprint = pprint.pprint,
@@ -128,6 +147,10 @@ def setUp(test):
     setupstack.context_manager(
         test, mock.patch('raven.handlers.logging.SentryHandler'))
     setupstack.context_manager(test, mock.patch('ZConfig.configureLoggers'))
+    global meta_db
+    meta_db = MemoryDB({})
+    setupstack.context_manager(
+        test, mock.patch('getpass.getuser', lambda: 'tester'))
 
 def setUpTime(test):
     setUp(test)
@@ -151,7 +174,7 @@ def test_suite():
                     (re.compile(r"'updated': "+time_pat), 'UPDATED'),
                     ])
                 ) + manuel.capture.Manuel(),
-            'agent.rst', 'schedule.rst',
+            'agent.rst', 'meta.rst', 'schedule.rst', 'squelch.rst',
             setUp=setUp, tearDown=setupstack.tearDown),
         manuel.testing.TestSuite(
             manuel.doctest.Manuel(
