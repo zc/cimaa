@@ -53,7 +53,7 @@ Then retreive newer messages from slack::
     >>> assert len(my_msgs) == 2
     >>> [alert] = [msg for msg in my_msgs if 'Alert' in msg['text']]
     >>> [clear] = [msg for msg in my_msgs if 'Clear' in msg['text']]
-    
+
     >>> pprint(alert)
     {u'subtype': u'bot_message',
      u'text': u'_*Alert*_: *<http://test.example.com|test.example.com> doctest*: Ouch!',
@@ -67,4 +67,3 @@ Then retreive newer messages from slack::
      u'ts': u'...',
      u'type': u'message',
      u'username': u'cimaa'}
-
