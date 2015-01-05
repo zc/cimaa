@@ -19,9 +19,8 @@ aws_access_key_id and aws_secret_access_key
   then credentials will be searched for in environment variables,
   ~/.boto and instance credentials.
 
-There are helper scripts for setting up dynamodb tables, and for setting
-and unsetting squelches.  To use these, we need to set up a configuration
-file::
+There is a helper script for setting up dynamodb table.  To use this,
+we need to set up a configuration file::
 
   [database]
   class = zc.cimaa.dynamodb
@@ -44,14 +43,6 @@ We call the setup script, passing the name of the configuration file.
 
     >>> setup(['conf'])
 
-We'll use the squelch script to add a squelch:
-
-    >>> squelch = pkg_resources.load_entry_point(
-    ...      'zc.cimaa', 'console_scripts', 'squelch-dynamodb')
-    >>> import mock
-    >>> with mock.patch('getpass.getuser', return_value='tester'):
-    ...     squelch(['conf', 'test', 'testing'])
-
 Let's set up a database object.
 
     >>> import zc.cimaa.dynamodb
@@ -59,12 +50,25 @@ Let's set up a database object.
 
 And perform some operations:
 
+    >>> db.squelch('test', 'testing', 'tester', True)
+    >>> db.squelch('.', 'testing global', 'deployer')
     >>> db.set_faults('agent', [])
     >>> db.get_faults('agent')
     []
 
     >>> db.get_squelches()
-    [u'test']
+    [u'.', u'test']
+    >>> pprint(db.get_squelch_details())
+    [{u'permanent': False,
+      u'reason': u'testing global',
+      u'regex': u'.',
+      u'time': Decimal('1420294404.0289080142974853515625'),
+      u'user': u'deployer'},
+     {u'permanent': True,
+      u'reason': u'testing',
+      u'regex': u'test',
+      u'time': Decimal('1420294404.0289080142974853515625'),
+      u'user': u'tester'}]
 
     >>> db.set_faults('agent', [
     ...     dict(name='f1', severity=40, message='f1 is bad'),
@@ -96,11 +100,7 @@ And perform some operations:
                  u'message': u'f3 is bad',
                  u'name': u'f3',
                  u'severity': Decimal('50'),
-                 u'triggered': u'y'}],
-     'squelches': [{u'reason': u'testing',
-                    u'regex': u'test',
-                    u'time': Decimal('1418068818.7642829418182373046875'),
-                    u'user': u'tester'}]}
+                 u'triggered': u'y'}],...
 
 Notice that the faults data includes data for an agent '_'. This is
 heartbeat data that tells us when the agent last ran.  We can use this
@@ -128,7 +128,8 @@ to find old agents:
       u'triggered': u'y'}]
     >>> db.set_faults('agent', [])
 
-    >>> squelch(['conf', 'test', '-r'])
+    >>> db.unsquelch('.')
+    >>> db.unsquelch('test')
     >>> pprint(db.dump())
     {'faults': [{u'agent': u'_',
                  u'name': u'agent',

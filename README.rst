@@ -177,6 +177,8 @@ Done
 
 - PagerDuty alerter implementation.
 
+- Meta checks for dead agents and forgotten squelches.
+
 - Production use
 
 To do
@@ -184,23 +186,36 @@ To do
 
 - Web front end to view current faults and squelches and to manage squelches.
 
-- Meta checks
-
 - Network checks
 
+- Check rules that prevent alerts in sleeping hours for less important checks.
+
 - Maybe database configuration of checks to be performed everywhere.
+
+- Maybe a backup alert mechanism. We already have this to some extent
+  if sentry is used.
 
 Changes
 *******
 
-On monitor timeout, error rather than going critical immediately.
-Timeouts can be intermittent and we don't want to alert in this case.
+- Added a meta-monitor for dead agents and forgotten squelches.
+
+  This required adding a new method to the database API.
+
+- Added a ``permanent`` flag for squelches intended to hang around
+  indefinitely.  The meta-monitor doesn't complain about permanent
+  squelches.
+
+- Replaced the dynamodb-specific squelch script with generic squelch
+  and unsquelch scripts.
+
+- On monitor timeout, error rather than going critical immediately.
+  Timeouts can be intermittent and we don't want to alert in this case.
 
 0.1.3 (2014-12-22)
 ==================
 
 Fix local variable reference in DynamoDB implementation.
-
 
 0.1.2 (2014-12-18)
 ==================
@@ -208,12 +223,10 @@ Fix local variable reference in DynamoDB implementation.
 Restore ``message`` field on fault records returned by DynamoDB, if
 omitted because of empty string value.
 
-
 0.1.1 (2014-12-17)
 ==================
 
 Fixed log level configuration for Sentry.
-
 
 0.1.0 (2014-12-15)
 ==================

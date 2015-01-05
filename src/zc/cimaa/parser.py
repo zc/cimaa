@@ -18,3 +18,8 @@ def parse_file(name):
 def parser_dict(parser):
     return dict((section, dict(parser.items(section)))
                 for section in parser.sections())
+
+def load_handler(config):
+    mod, name = config['class'].split(':')
+    mod = __import__(mod, {}, {}, [name])
+    return getattr(mod, name)(config)

@@ -1,11 +1,13 @@
 # Dynamodb implementation
 
 from boto import dynamodb2
+import boto.dynamodb2.exceptions
 import boto.dynamodb2.fields
 import boto.dynamodb2.table
 import boto.dynamodb2.types
 import sys
 import time
+import zc.cimaa.parser
 
 schemas = dict(
     squelches=dict(schema=[dynamodb2.fields.HashKey('regex')]),
@@ -70,13 +72,27 @@ class DB:
 
         self.last_faults[agent] = set(fault['name'] for fault in faults)
 
-    def get_squelches(self):
-        return [item['regex'] for item in self.squelches.scan()]
+    def get_squelch(self, regex):
+        try:
+            item = self.squelches.lookup(regex)
+        except boto.dynamodb2.exceptions.ItemNotFound:
+            return None
+        return dict(item.items())
 
-    def squelch(self, regex, reason, user):
+    def get_squelches(self):
+        return sorted(item['regex']
+                      for item in self.squelches.scan(attributes=['regex'])
+                      )
+
+    def get_squelch_details(self):
+        return sorted((_squelch_data(item) for item in self.squelches.scan()),
+                      key = _squelch_regex)
+
+    def squelch(self, regex, reason, user, permanent=False):
         self.squelches.put_item(dict(regex=regex,
                                      reason=reason,
                                      user=user,
+                                     permanent = 'p' if permanent else '',
                                      time=time.time(),
                                      ))
 
@@ -92,6 +108,14 @@ class DB:
                 (dict(item.items()) for item in self.squelches.scan()),
                 key=lambda item: ['regex']),
             )
+
+def _squelch_data(item):
+    data = dict(item.items())
+    data[u'permanent'] = bool(data.get(u'permanent'))
+    return data
+
+def _squelch_regex(data):
+    return data['regex']
 
 def connect(config):
     if 'aws_access_key_id' in config:
@@ -109,8 +133,7 @@ def connect(config):
     return conn, prefix
 
 def config_parse(filename):
-    import zc.cimaa.parser
-    return zc.cimaa.parser.parse_file(filename).get('database', {})
+    return zc.cimaa.parser.parse_file(filename)['database']
 
 def setup(args=None):
     if args is None:
@@ -138,30 +161,3 @@ def create(conn, prefix, name):
 def table(conn, prefix, name):
     return dynamodb2.table.Table(
         prefix + name, connection=conn, **schemas[name])
-
-def squelch(args=None):
-    if args is None:
-        args = sys.argv[1:]
-
-    import argparse, getpass
-    parser = argparse.ArgumentParser(description='Add a squelch.')
-    parser.add_argument('configuration',
-                        help='agent configuration file')
-    parser.add_argument('regex',
-                        help='regular expression to be squelched')
-    parser.add_argument('reason', nargs='?', default=None,
-                        help='The reason for this squelch')
-    parser.add_argument('-r', '--remove', action='store_true',
-                        help='remove, rather than add the squelch')
-    args = parser.parse_args(args)
-    config = config_parse(args.configuration)
-    db = DB(config_parse(args.configuration), tables=('squelches'))
-    conn, prefix = connect(config)
-
-    squelches = table(conn, prefix, 'squelches')
-    if args.remove:
-        db.unsquelch(args.regex)
-    else:
-        if args.reason is None:
-            raise ValueError("A reason must be supplied when adding squelches")
-        db.squelch(args.regex, args.reason, getpass.getuser())
