@@ -59,7 +59,7 @@ class IDB(zope.interface.Interface):
         See get_faults for a description of fault data.
         """
 
-    def get_squelches(detail):
+    def get_squelches():
         "Return a sequence of squelch regular-expression strings"
 
     def get_squelch_details():
