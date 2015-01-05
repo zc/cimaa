@@ -29,11 +29,11 @@ To add a squelch:
     {'.': {'permanent': False,
            'reason': 'deploying',
            'time': 1417968068.01,
-           'user': 'jim'},
+           'user': 'tester'},
      'test': {'permanent': True,
               'reason': 'testing',
               'time': 1417968068.01,
-              'user': 'jim'}}
+              'user': 'tester'}}
 
 To remove a squelch:
 

@@ -149,6 +149,8 @@ def setUp(test):
     setupstack.context_manager(test, mock.patch('ZConfig.configureLoggers'))
     global meta_db
     meta_db = MemoryDB({})
+    setupstack.context_manager(
+        test, mock.patch('getpass.getuser', lambda: 'tester'))
 
 def setUpTime(test):
     setUp(test)
