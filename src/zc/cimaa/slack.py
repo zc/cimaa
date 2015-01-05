@@ -1,5 +1,8 @@
-#import gevent.monkey
-#gevent.monkey.patch_all()
+"""Post trigger() and resolve() messages to a slack channel
+
+``target`` may be a '<!channel>' or '<!everyone>' to invoke a slack
+notification to all logged in users.
+"""
 import slacker
 
 class Alerter:
@@ -13,11 +16,11 @@ class Alerter:
         self.name = 'cimaa'
         self.slack = slacker.Slacker(self.token)
 
-    def _broken(self, name):
+    def _friendly_name(self, name):
         return '*' + ' '.join(name[2:].split('/', 2)) + '*'
 
     def trigger(self, name, message):
-        self._post("_*Alert*_: %s: %s" % (self._broken(name) , message))
+        self._post("_*Alert*_: %s: %s" % (self._friendly_name(name) , message))
 
     def _post(self, message):
         if self.target:
@@ -25,4 +28,4 @@ class Alerter:
         self.slack.chat.post_message(self.channel, message, username=self.name)
 
     def resolve(self, name):
-        self._post("*Clear*: %s" % (self._broken(name)))
+        self._post("*Clear*: %s" % (self._friendly_name(name)))
