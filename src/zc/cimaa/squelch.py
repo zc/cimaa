@@ -14,7 +14,7 @@ def squelch(args=None):
     parser.add_argument('reason', nargs='?', default=None,
                         help='The reason for this squelch')
     parser.add_argument('-p', '--permanent', action='store_true',
-                        help='Make the sw')
+                        help='Make the squelch permanent')
     args = parser.parse_args(args)
     db = zc.cimaa.parser.load_handler(
         zc.cimaa.parser.parse_file(args.configuration)['database'])
