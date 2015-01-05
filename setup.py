@@ -19,7 +19,7 @@ extras_require = dict(
     dynamodb  = ['boto', 'keyring'],
     pagerduty = ['grequests'],
     sentry    = ['raven'],
-    slack = ['slacker'],
+    slack     = ['slacker'],
     zconfig   = ['zconfig'],
     )
 extras_require['all'] = reduce((lambda a, b: a + b),
