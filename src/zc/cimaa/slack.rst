@@ -15,6 +15,10 @@ set up for us are::
     channel_id:     The Slack ID of the named channel (Used for test
                     validation)
 
+(You can find a Slack API token in the `Slack documentation
+<https://api.slack.com/web>`_. Under Authentication it will either show a token
+if you've created one or provide an option to generate one.)
+
 We'll also use the slack API to validate our tests::
 
     >>> import slacker
