@@ -50,14 +50,14 @@ class MemoryDB:
         return [dict(name=k, updated=v) for k, v in self.agents.items()
                 if v < max_updated]
 
-
     def get_faults(self, agent):
         return self.faults.get(agent, ())
 
     def set_faults(self, agent, faults, now=None):
-        times = dict((f[name], f['since'])
-                     for f in self.faults.get('agent', ())
-                     if f['name'])
+        times = {
+            f[name]: f['since']
+            for f in self.faults.get('agent', ()) if f['name']
+            }
         for f in faults:
             f['since'] = times.get(f['name'], f['updated'])
         self.faults[agent] = faults
@@ -126,9 +126,7 @@ def setUpSlack(test):
     slack = slacker.Slacker(token)
     channel_list = slack.channels.list()
     channel_list = channel_list.body['channels']
-    chan_map = dict(
-                [(x['name'], x) for x in channel_list]
-                   )
+    chan_map = {x['name']: x for x in channel_list}
     assert channel in chan_map
     if chan_map[channel]['is_archived']:
         import warnings
