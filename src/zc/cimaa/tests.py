@@ -50,14 +50,14 @@ class MemoryDB:
         return [dict(name=k, updated=v) for k, v in self.agents.items()
                 if v < max_updated]
 
-
     def get_faults(self, agent):
         return self.faults.get(agent, ())
 
     def set_faults(self, agent, faults, now=None):
-        times = dict((f[name], f['since'])
-                     for f in self.faults.get('agent', ())
-                     if f['name'])
+        times = {
+            f[name]: f['since']
+            for f in self.faults.get('agent', ()) if f['name']
+            }
         for f in faults:
             f['since'] = times.get(f['name'], f['updated'])
         self.faults[agent] = faults
@@ -118,6 +118,26 @@ def OutputMetrics(config):
     def output_metrics(timestamp, name, value, units=''):
         print timestamp, name, value, units
     return output_metrics
+
+def setUpSlack(test):
+    import slacker
+    token = os.environ['SLACK_TOKEN']
+    channel = os.environ.get('SLACK_CHANNEL') or 'general'
+    slack = slacker.Slacker(token)
+    channel_list = slack.channels.list()
+    channel_list = channel_list.body['channels']
+    chan_map = {x['name']: x for x in channel_list}
+    assert channel in chan_map
+    if chan_map[channel]['is_archived']:
+        import warnings
+        warnings.warn("Unarchiving test channel. Re-archive as desired")
+        slack.channels.unarchive(chan_map[channel]['id'])
+    test.globs.update(
+        channel = channel,
+        channel_id = chan_map[channel]['id'],
+        token = token,
+        pprint = pprint.pprint,
+    )
 
 def setUpPP(test):
     from json import dumps as original_dumps
@@ -199,4 +219,10 @@ def test_suite():
                 'dynamodb.rst',
                 setUp=setUp, tearDown=setupstack.tearDown),
             )
+    if 'SLACK_TOKEN' in os.environ:
+        suite.addTest(
+            doctest.DocFileSuite(
+                'slack.rst', optionflags=optionflags,
+                setUp=setUpSlack),
+        )
     return suite
