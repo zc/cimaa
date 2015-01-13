@@ -252,19 +252,24 @@ checker will return file contents of they're JSON:
     >>> print agent.db
     {'test.example.com': []}
 
-We generate a fault of json is malformed or lacks a faults property:
+.. The following checks include a newline before the error condition
+   since Python < 2.7.4 got the column number wrong for errors in the
+   first line of the JSON data.
+   http://bugs.python.org/issue17225
+
+We generate a fault if json is malformed or lacks a faults property:
 
     >>> with open('foo.txt', 'w') as f:
-    ...     f.write('{"faults": []')
+    ...     f.write('{\n"faults": []')
     >>> agent.perform(0)
     OutputAlerter trigger //test.example.com/test/foo.txt#json-error
-    ValueError: Expecting object: line 1 column 14 (char 13)
+    ValueError: Expecting object: line 2 column 13 (char 14)
 
     >>> with open('foo.txt', 'w') as f:
-    ...     f.write('{')
+    ...     f.write('{\n')
     >>> agent.perform(0)
     OutputAlerter trigger //test.example.com/test/foo.txt#json-error
-    ValueError: Expecting object: line 1 column 2 (char 1)
+    ValueError: Expecting object: line 2 column 1 (char 2)
     >>> with open('foo.txt', 'w') as f:
     ...     f.write('{}')
     >>> agent.perform(0)
