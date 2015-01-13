@@ -1,9 +1,12 @@
-"""Post trigger() and resolve() messages to a slack channel
+"""\
+Post trigger() and resolve() messages to a slack channel
 
 ``target`` may be a '<!channel>' or '<!everyone>' to invoke a slack
 notification to all logged in users.
 """
+
 import slacker
+
 
 class Alerter:
 
