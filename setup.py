@@ -20,7 +20,7 @@ extras_require = dict(
     pagerduty = ['grequests'],
     sentry    = ['raven'],
     slack     = ['slacker'],
-    zconfig   = ['zconfig'],
+    zconfig   = ['ZConfig'],
     )
 extras_require['all'] = reduce((lambda a, b: a + b),
                                (i[1] for i in extras_require.items()
