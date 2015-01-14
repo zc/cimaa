@@ -177,6 +177,8 @@ Done
 
 - PagerDuty alerter implementation.
 
+- Slack alerter implementation.
+
 - Meta checks for dead agents and forgotten squelches.
 
 - Production use
@@ -184,7 +186,8 @@ Done
 To do
 =====
 
-- Web front end to view current faults and squelches and to manage squelches.
+- Web front end to view current faults and squelches and to manage squelches
+  (in progress as a separate package).
 
 - Network checks
 
@@ -197,6 +200,8 @@ To do
 
 Changes
 *******
+
+- Added an alerter that talks to Slack_.
 
 - Added a meta-monitor for dead agents and forgotten squelches.
 
@@ -232,3 +237,6 @@ Fixed log level configuration for Sentry.
 ==================
 
 Initial release.
+
+
+.. _Slack: https://slack.com/
