@@ -201,6 +201,9 @@ To do
 Changes
 *******
 
+0.2.0 (2015-01-14)
+==================
+
 - Added an alerter that talks to Slack_.
 
 - Added a meta-monitor for dead agents and forgotten squelches.
