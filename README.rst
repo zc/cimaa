@@ -177,7 +177,7 @@ Done
 
 - PagerDuty alerter implementation.
 
-- Slack alerter implementation.
+- Slack_ alerter implementation.
 
 - Meta checks for dead agents and forgotten squelches.
 
