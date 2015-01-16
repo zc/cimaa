@@ -28,7 +28,7 @@ There's a meta-monitor entry point:
 
     >>> import pkg_resources
     >>> monitor = pkg_resources.load_entry_point(
-    ...     'zc.cimaa', 'console_scripts', 'meta-monitor')
+    ...     'zc.cimaa', 'console_scripts', 'meta-check')
 
 The monitor is run with the an agent configuration file as it's
 argument. It uses the database definition::
