@@ -201,6 +201,11 @@ To do
 Changes
 *******
 
+0.2.1 (2015-01-16)
+==================
+
+- Renamed **meta-monitor** entry point to **meta-check**.
+
 0.2.0 (2015-01-14)
 ==================
 

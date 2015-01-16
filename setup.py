@@ -11,7 +11,7 @@
 # FOR A PARTICULAR PURPOSE.
 #
 ##############################################################################
-name, version = 'zc.cimaa', '0.2.0'
+name, version = 'zc.cimaa', '0.2.1'
 
 install_requires = ['setuptools', 'gevent']
 extras_require = dict(
@@ -30,7 +30,7 @@ extras_require['test'] += extras_require['all']
 entry_points = """
 [console_scripts]
 agent = zc.cimaa.agent:main
-meta-monitor = zc.cimaa.meta:main
+meta-check = zc.cimaa.meta:main
 setup-dynamodb = zc.cimaa.dynamodb:setup
 squelch = zc.cimaa.squelch:squelch
 unsquelch = zc.cimaa.squelch:unsquelch
