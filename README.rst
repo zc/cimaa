@@ -201,6 +201,9 @@ To do
 Changes
 *******
 
+0.2.2 (2015-01-16)
+==================
+
 - Make databases return floats for times; dynamodb had returned decimals.
 
 0.2.1 (2015-01-16)
