@@ -43,7 +43,7 @@ class DB:
                     index='updated', agent__eq='_', updated__lt=max_updated)]
 
     def get_faults(self, agent):
-        faults = [_fault_data(item.items())
+        faults = [_fault_data(item)
                   for item in self.faults.query_2(agent__eq=agent)]
         self.last_faults[agent] = set(fault['name'] for fault in faults)
         return faults
@@ -73,7 +73,7 @@ class DB:
             item = self.squelches.lookup(regex)
         except boto.dynamodb2.exceptions.ItemNotFound:
             return None
-        return _squelch_data(item.items())
+        return _squelch_data(item)
 
     def get_squelches(self):
         return sorted(item['regex']
@@ -82,7 +82,7 @@ class DB:
 
     def get_squelch_details(self):
         return sorted((_squelch_data(item) for item in self.squelches.scan()),
-                      key = _squelch_regex)
+                      key=_squelch_regex)
 
     def squelch(self, regex, reason, user, permanent=False):
         self.squelches.put_item(dict(regex=regex,
