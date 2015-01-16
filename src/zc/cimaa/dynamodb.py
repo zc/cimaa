@@ -38,17 +38,13 @@ class DB:
 
     def old_agents(self, age):
         max_updated = time.time() - age
-        return [dict(name=i['name'], updated=i['updated'])
+        return [dict(name=i['name'], updated=float(i['updated']))
                 for i in self.faults.query_2(
                     index='updated', agent__eq='_', updated__lt=max_updated)]
 
     def get_faults(self, agent):
-        faults = [dict(item.items())
+        faults = [_fault_data(item.items())
                   for item in self.faults.query_2(agent__eq=agent)]
-        # dynamodb doesn't populate keys with empty strings
-        for f in faults:
-            if 'message' not in f:
-                f[u'message'] = u''
         self.last_faults[agent] = set(fault['name'] for fault in faults)
         return faults
 
@@ -77,7 +73,7 @@ class DB:
             item = self.squelches.lookup(regex)
         except boto.dynamodb2.exceptions.ItemNotFound:
             return None
-        return dict(item.items())
+        return _squelch_data(item.items())
 
     def get_squelches(self):
         return sorted(item['regex']
@@ -109,9 +105,18 @@ class DB:
                 key=lambda item: ['regex']),
             )
 
+def _fault_data(item):
+    data = dict(item.items())
+    # dynamodb doesn't populate keys with empty strings
+    if u'message' not in data:
+        data[u'message'] = u''
+    data[u'updated'] = float(data[u'updated'])
+    return data
+
 def _squelch_data(item):
     data = dict(item.items())
     data[u'permanent'] = bool(data.get(u'permanent'))
+    data[u'time'] = float(data[u'time'])
     return data
 
 def _squelch_regex(data):
