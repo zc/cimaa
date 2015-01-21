@@ -201,6 +201,9 @@ To do
 Changes
 *******
 
+0.3.0 (2015-01-21)
+==================
+
 - Allow "optional" as synonym for "?" in threshold specifications
   (https://bitbucket.org/zc/cimaa/issue/5/).
 
