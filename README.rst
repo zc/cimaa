@@ -165,7 +165,7 @@ Done
 
   - Metric support
 
-    - metrics outout
+    - metrics output
 
     - metric-threshold checks
 
