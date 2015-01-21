@@ -204,6 +204,9 @@ Changes
 - Allow "optional" as synonym for "?" in threshold specifications
   (https://bitbucket.org/zc/cimaa/issue/5/).
 
+- Prefer SUDO_USER is getpass.getuser() returns "root"
+  (https://bitbucket.org/zc/cimaa/issue/6/).
+
 0.2.3 (2015-01-16)
 ==================
 
