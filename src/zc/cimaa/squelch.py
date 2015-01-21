@@ -1,6 +1,15 @@
 import argparse
 import getpass
+import os
 import zc.cimaa.parser
+
+
+def getuser():
+    user = getpass.getuser()
+    if user == "root" and "SUDO_USER" in os.environ:
+        user = os.environ["SUDO_USER"]
+    return user
+        
 
 def squelch(args=None):
     if args is None:
@@ -20,7 +29,8 @@ def squelch(args=None):
         zc.cimaa.parser.parse_file(args.configuration)['database'])
     if args.reason is None:
         raise ValueError("A reason must be supplied when adding squelches")
-    db.squelch(args.regex, args.reason, getpass.getuser(), args.permanent)
+    db.squelch(args.regex, args.reason, getuser(), args.permanent)
+
 
 def unsquelch(args=None):
     if args is None:
