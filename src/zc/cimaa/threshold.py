@@ -12,6 +12,10 @@ Required thresholds fault if no metric:
     >>> o([dict(name='foo', value=42)])
     >>> o([])
 
+    >>> o = Threshold('foo optional warning >= 50 error >= 99').check
+    >>> o([dict(name='foo', value=42)])
+    >>> o([])
+
 Error levels:
 
     >>> pp(r([dict(name='foo', value=51)]))
@@ -66,7 +70,7 @@ class Threshold:
     def __init__(self, definition):
         tokens = definition.strip().split()
         self.name = tokens.pop(0)
-        if tokens[0] == '?':
+        if tokens[0] in ('?', 'optional'):
             self.optional = True
             tokens.pop(0)
 
