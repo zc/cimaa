@@ -157,10 +157,10 @@ Let's set up an agent::
   base_interval = .1
 
   [database]
-  class = zc.cimaa.tests:MemoryDB
+  class = zc.cimaa.stub:MemoryDB
 
   [alerter]
-  class = zc.cimaa.tests:OutputAlerter
+  class = zc.cimaa.stub:OutputAlerter
 
 .. -> src
 

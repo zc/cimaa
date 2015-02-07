@@ -28,13 +28,13 @@ specify a mtrics handler::
   directory = agent.d
 
   [database]
-  class = zc.cimaa.tests:MemoryDB
+  class = zc.cimaa.stub:MemoryDB
 
   [alerter]
-  class = zc.cimaa.tests:OutputAlerter
+  class = zc.cimaa.stub:OutputAlerter
 
   [metrics]
-  class = zc.cimaa.tests:OutputMetrics
+  class = zc.cimaa.stub:OutputMetrics
 
 .. -> src
 

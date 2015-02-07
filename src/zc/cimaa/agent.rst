@@ -23,10 +23,10 @@ Define a configuration file::
   timeout = 1
 
   [database]
-  class = zc.cimaa.tests:MemoryDB
+  class = zc.cimaa.stub:MemoryDB
 
   [alerter]
-  class = zc.cimaa.tests:OutputAlerter
+  class = zc.cimaa.stub:OutputAlerter
 
 .. -> src
 
@@ -480,13 +480,13 @@ implementation allows us to specify initial faults to test this::
   timeout = 1
 
   [database]
-  class = zc.cimaa.tests:MemoryDB
+  class = zc.cimaa.stub:MemoryDB
   faults = {"test.example.com": [{"message": "Badness",
                                   "name": "//test.example.com/test/foo.txt",
                                   "severity": 50}]}
 
   [alerter]
-  class = zc.cimaa.tests:OutputAlerter
+  class = zc.cimaa.stub:OutputAlerter
 
 .. -> src
 
@@ -557,10 +557,10 @@ For example::
   sentry_dsn = http://public:secret@example.com/1
 
   [database]
-  class = zc.cimaa.tests:MemoryDB
+  class = zc.cimaa.stub:MemoryDB
 
   [alerter]
-  class = zc.cimaa.tests:OutputAlerter
+  class = zc.cimaa.stub:OutputAlerter
 
 .. -> src
 
@@ -590,10 +590,10 @@ Or::
     </logger>
 
   [database]
-  class = zc.cimaa.tests:MemoryDB
+  class = zc.cimaa.stub:MemoryDB
 
   [alerter]
-  class = zc.cimaa.tests:OutputAlerter
+  class = zc.cimaa.stub:OutputAlerter
 
 .. -> src
 
