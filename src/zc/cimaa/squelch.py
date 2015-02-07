@@ -1,6 +1,7 @@
 import argparse
 import getpass
 import os
+import sys
 import zc.cimaa.parser
 
 
@@ -9,7 +10,6 @@ def getuser():
     if user == "root" and "SUDO_USER" in os.environ:
         user = os.environ["SUDO_USER"]
     return user
-        
 
 def squelch(args=None):
     if args is None:

@@ -201,6 +201,11 @@ To do
 Changes
 *******
 
+0.3.1 (2015-02-07)
+==================
+
+- Fixed: missing sys import for squelch script.
+
 0.3.0 (2015-01-21)
 ==================
 
