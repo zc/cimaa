@@ -11,7 +11,7 @@
 # FOR A PARTICULAR PURPOSE.
 #
 ##############################################################################
-name, version = 'zc.cimaa', '0.3.0'
+name, version = 'zc.cimaa', '0.3.1'
 
 install_requires = ['setuptools', 'gevent']
 extras_require = dict(
