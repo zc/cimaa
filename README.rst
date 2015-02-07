@@ -201,6 +201,9 @@ To do
 Changes
 *******
 
+- If a check test returns alternating critical/error states (it's
+  unusual for a test to return critical), the stay critical until it clears.
+
 - Moved stub implementations into ``zc.cimaa.stub`` to make them
   easier to use outside of tests (e.g. when debugging real
   installations.)

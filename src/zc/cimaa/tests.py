@@ -118,9 +118,10 @@ def test_suite():
             'metrics.rst',
             setUp=setUpTime, tearDown=setupstack.tearDown),
         doctest.DocTestSuite('zc.cimaa.nagiosperf', optionflags=optionflags),
-        doctest.DocTestSuite(
-            'zc.cimaa.threshold', optionflags=optionflags,
-            setUp=setUpPP),
+        doctest.DocTestSuite('zc.cimaa.threshold',
+                             optionflags=optionflags,
+                             setUp=setUpPP),
+        doctest.DocTestSuite('zc.cimaa.agent', optionflags=optionflags),
         ))
     if 'DYNAMO_TEST' in os.environ:
         suite.addTest(

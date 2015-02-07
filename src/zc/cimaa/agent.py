@@ -94,6 +94,7 @@ class Agent:
             if cresults is None:
                 checklet.kill(block=False)
                 cresults = dict(faults=[monitor_error('timeout')])
+
             for f in cresults.get('faults', ()):
                 if f.get('name', ''):
                     name = check.name + '#' + f['name']
@@ -275,20 +276,7 @@ class Check:
                     m['timestamp'] = (
                         datetime.datetime.utcfromtimestamp(now).isoformat())
 
-            # handle soft errors
-            errors = [f for f in result.get('faults', ())
-                      if logging.ERROR <= f['severity'] < logging.CRITICAL]
-            if errors:
-                self.failures += 1
-                if self.failures > self.retry:
-                    for f in errors:
-                        f['severity'] = logging.CRITICAL
-                else:
-                    for f in errors:
-                        f['message'] = "%s (%s of %s)" % (
-                            f.get('message', ''), self.failures, self.chances)
-            else:
-                self.failures = 0
+            self.check_critical(result.get('faults', ()))
 
             return result
         except Exception, v:
@@ -300,6 +288,69 @@ class Check:
                 severity = logging.CRITICAL,
                 updated = time.time(),
                 )])
+
+    def check_critical(self, faults):
+        """handle soft errors
+
+        If we get enough soft errors we go critical and stay critical:
+
+        >>> checker = Check('test', dict(command=''))
+        >>> checker.check_critical([dict(severity=logging.ERROR)])
+        [{'message': ' (1 of 4)', 'severity': 40}]
+        >>> checker.check_critical([dict(severity=logging.ERROR)])
+        [{'message': ' (2 of 4)', 'severity': 40}]
+        >>> checker.check_critical([dict(severity=logging.ERROR)])
+        [{'message': ' (3 of 4)', 'severity': 40}]
+        >>> checker.check_critical([dict(severity=logging.ERROR)])
+        [{'severity': 50}]
+        >>> checker.check_critical([dict(severity=logging.ERROR)])
+        [{'severity': 50}]
+
+        But if we get a critical fault, and then an error, we stay critical:
+
+        >>> checker.check_critical([dict(severity=logging.CRITICAL)])
+        [{'severity': 50}]
+        >>> checker.check_critical([dict(severity=logging.ERROR)])
+        [{'severity': 50}]
+
+        No errors makes us start over:
+
+        >>> checker.check_critical([])
+        []
+        >>> checker.check_critical([dict(severity=logging.ERROR)])
+        [{'message': ' (1 of 4)', 'severity': 40}]
+        >>> checker.check_critical([])
+        []
+
+        But a critical makes us stay critical:
+
+        >>> checker.check_critical([dict(severity=logging.CRITICAL)])
+        [{'severity': 50}]
+        >>> checker.check_critical([dict(severity=logging.ERROR)])
+        [{'severity': 50}]
+        """
+        critical = [f for f in faults
+                    if f['severity'] >= logging.CRITICAL]
+        errors = [f for f in faults
+                  if logging.ERROR <= f['severity'] < logging.CRITICAL]
+
+        if critical:
+            self.failures = self.retry
+
+        if errors:
+            self.failures += 1
+            if self.failures > self.retry:
+                for f in errors:
+                    f['severity'] = logging.CRITICAL
+            else:
+                for f in errors:
+                    f['message'] = "%s (%s of %s)" % (
+                        f.get('message', ''), self.failures, self.chances)
+
+        elif not critical:
+            self.failures = 0
+
+        return faults
 
     def thresholds(self, result):
         pass
