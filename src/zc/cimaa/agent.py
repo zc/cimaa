@@ -239,7 +239,7 @@ class Check:
                     result = dict(faults=[dict(
                         name='json-error',
                         message = "%s: %s" % (v.__class__.__name__, v),
-                        severity = logging.CRITICAL,
+                        severity = logging.ERROR,
                         )])
                 faults = result['faults']
             else:
@@ -264,7 +264,7 @@ class Check:
                                            message=stdout))
                 else:
                     faults.append(monitor_error("status", stdout))
-                    status = logging.CRITICAL
+                    status = logging.ERROR
 
 
             self.thresholds(result)
@@ -285,7 +285,7 @@ class Check:
             return dict(faults=[dict(
                 name='checker',
                 message = "%s: %s" % (v.__class__.__name__, v),
-                severity = logging.CRITICAL,
+                severity = logging.ERROR,
                 updated = time.time(),
                 )])
 

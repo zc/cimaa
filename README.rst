@@ -208,6 +208,9 @@ Changes
   easier to use outside of tests (e.g. when debugging real
   installations.)
 
+- Check meta-failures (check had error, such as invalid output)
+  now start soft to avoid alerting on intermittent check failures.
+
 0.3.1 (2015-02-07)
 ==================
 

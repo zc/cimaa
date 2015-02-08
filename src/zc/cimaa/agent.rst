@@ -262,6 +262,9 @@ We generate a fault if json is malformed or lacks a faults property:
     >>> with open('foo.txt', 'w') as f:
     ...     f.write('{\n"faults": []')
     >>> agent.perform(0)
+    >>> agent.perform(0)
+    >>> agent.perform(0)
+    >>> agent.perform(0)
     OutputAlerter trigger //test.example.com/test/foo.txt#json-error
     ValueError: Expecting object: line 2 column 13 (char 14)
 
