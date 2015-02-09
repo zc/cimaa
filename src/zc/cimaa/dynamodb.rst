@@ -62,12 +62,12 @@ And perform some operations:
     [{u'permanent': False,
       u'reason': u'testing global',
       u'regex': u'.',
-      u'time': 1420294404.0289080142974853515625,
+      u'time': 1420294404,
       u'user': u'deployer'},
      {u'permanent': True,
       u'reason': u'testing',
       u'regex': u'test',
-      u'time': 1420294404.0289080142974853515625,
+      u'time': 1420294404,
       u'user': u'tester'}]
 
     >>> db.set_faults('agent', [
@@ -87,11 +87,13 @@ And perform some operations:
 
     >>> pprint(db.dump())
     {'faults': [{u'agent': u'_',
+                 u'message': u'',
                  u'name': u'agent',
-                 u'updated': 1418160088.916944026947021484375},
+                 u'updated': 1418160088},
                 {u'agent': u'agent',
+                 u'message': u'',
                  u'name': u'blank',
-                 u'severity': T},
+                 u'severity': 50},
                 {u'agent': u'agent',
                  u'message': u'f2 is bad',
                  u'name': u'f2',
@@ -110,21 +112,21 @@ to find old agents:
     []
     >>> pprint(db.old_agents(0))
     [{'name': u'agent',
-      'updated': 1418160088.916944026947021484375}]
+      'updated': 1418160088}]
 
     >>> pprint(db.get_faults('agent'))
     [{u'agent': u'agent',
       u'message': u'',
       u'name': u'blank',
-      u'severity': T},
+      u'severity': 50},
      {u'agent': u'agent',
       u'message': u'f2 is bad',
       u'name': u'f2',
-      u'severity': Decimal('40')},
+      u'severity': 40},
      {u'agent': u'agent',
       u'message': u'f3 is bad',
       u'name': u'f3',
-      u'severity': Decimal('50'),
+      u'severity': 50,
       u'triggered': u'y'}]
     >>> db.set_faults('agent', [])
 
@@ -132,8 +134,9 @@ to find old agents:
     >>> db.unsquelch('test')
     >>> pprint(db.dump())
     {'faults': [{u'agent': u'_',
+                 u'message': u'',
                  u'name': u'agent',
-                 u'updated': 1418160089.4438440799713134765625}],
+                 u'updated': 1418160089}],
      'squelches': []}
 
 DynamoDB does not return keys for empty string values. The DB implementation
