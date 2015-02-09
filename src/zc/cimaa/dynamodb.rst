@@ -151,6 +151,31 @@ has to ensure that it gets restored to avoid KeyErrors::
       u'name': u'blank',
       u'severity': 50}]
 
+The remove_agent method is used to remove an agent from the database
+completely; both faults and the heartbeat record are removed, while
+records for other agents are not touched:
+
+    >>> db.set_faults('tnega', [
+    ...     dict(name='f1', severity=40, message='f1 is bad'),
+    ...     dict(name='f2', severity=40, message='f2 is bad'),
+    ...     ])
+
+    >>> db.remove_agent('agent')
+    >>> pprint(db.dump())
+    {'faults': [{u'agent': u'_',
+                 u'message': u'',
+                 u'name': u'tnega',
+                 u'updated': T},
+                {u'agent': u'tnega',
+                 u'message': u'f1 is bad',
+                 u'name': u'f1',
+                 u'severity': 40},
+                {u'agent': u'tnega',
+                 u'message': u'f2 is bad',
+                 u'name': u'f2',
+                 u'severity': 40}],
+     'squelches': []}
+
 
 Cleanup:
 
