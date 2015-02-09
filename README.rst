@@ -201,6 +201,10 @@ To do
 Changes
 *******
 
+- Moved stub implementations into ``zc.cimaa.stub`` to make them
+  easier to use outside of tests (e.g. when debugging real
+  installations.)
+
 0.3.1 (2015-02-07)
 ==================
 
