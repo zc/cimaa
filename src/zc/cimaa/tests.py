@@ -31,7 +31,7 @@ import zc.cimaa.pagerduty # See if grequest monkey-patching breaks other things
 import zc.cimaa.stub
 
 def MetaDB(conf):
-    "Dtabase that retains state accross factory calls"
+    "Database that retains state accross factory calls"
     return meta_db
 
 def setUpSlack(test):
