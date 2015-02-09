@@ -38,7 +38,7 @@ class DB:
 
     def old_agents(self, age):
         max_updated = time.time() - age
-        return [dict(name=i['name'], updated=float(i['updated']))
+        return [dict(name=i['name'], updated=int(i['updated']))
                 for i in self.faults.query_2(
                     index='updated', agent__eq='_', updated__lt=max_updated)]
 
@@ -56,7 +56,7 @@ class DB:
 
         with self.faults.batch_write() as batch:
             # Heartbeat
-            batch.put_item(dict(agent='_', name=agent, updated=time.time()))
+            batch.put_item(dict(agent='_', name=agent, updated=int(time.time())))
 
             for fault in faults:
                 data = fault.copy()
@@ -98,10 +98,12 @@ class DB:
     def dump(self, name=None):
         return dict(
             faults = sorted(
-                (dict(item.items()) for item in self.faults.scan()),
+                (_fault_data(dict(item.items()))
+                 for item in self.faults.scan()),
                 key=lambda item: (item['agent'], item['name'])),
             squelches = sorted(
-                (dict(item.items()) for item in self.squelches.scan()),
+                (_squelch_data(dict(item.items()))
+                 for item in self.squelches.scan()),
                 key=lambda item: ['regex']),
             )
 
@@ -110,13 +112,25 @@ def _fault_data(item):
     # dynamodb doesn't populate keys with empty strings
     if u'message' not in data:
         data[u'message'] = u''
-    data[u'updated'] = float(data[u'updated'])
+    if u'updated' in data:
+        try:
+            data[u'updated'] = int(data[u'updated'])
+        except ValueError:
+            # Existing data may be a float, so add a step to the conversion:
+            data[u'updated'] = int(float(data[u'updated']))
+    if u'severity' in data:
+        # Ints, not Decimals:
+        data[u'severity'] = int(data[u'severity'])
     return data
 
 def _squelch_data(item):
     data = dict(item.items())
     data[u'permanent'] = bool(data.get(u'permanent'))
-    data[u'time'] = float(data[u'time'])
+    try:
+        data[u'time'] = int(data[u'time'])
+    except ValueError:
+        # Existing data may be a float, so add a step to the conversion:
+        data[u'time'] = int(float(data[u'time']))
     return data
 
 def _squelch_regex(data):

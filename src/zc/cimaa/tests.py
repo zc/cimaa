@@ -97,7 +97,7 @@ def setUpTime(test):
 
 def test_suite():
     optionflags = doctest.NORMALIZE_WHITESPACE | doctest.ELLIPSIS
-    time_pat = r"\d+(\.\d*)?"
+    time_pat = r"\d{5,}(\.\d+)?"
     suite = unittest.TestSuite((
         manuel.testing.TestSuite(
             manuel.doctest.Manuel(
@@ -129,7 +129,7 @@ def test_suite():
                 manuel.doctest.Manuel(
                     optionflags=optionflags,
                     checker=renormalizing.OutputChecker([
-                        (re.compile(r"Decimal\('%s'\)" % time_pat), "T")
+                        (re.compile(time_pat), "T")
                         ])
                     ) + manuel.capture.Manuel(),
                 'dynamodb.rst',

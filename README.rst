@@ -201,6 +201,9 @@ To do
 Changes
 *******
 
+- Times stored in DynamoDB are converted to integers; sub-second
+  resolution isn't needed.
+
 - If a check test returns alternating critical/error states (it's
   unusual for a test to return critical), the stay critical until it clears.
 
