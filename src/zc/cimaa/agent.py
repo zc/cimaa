@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import re
+import signal
 import socket
 import sys
 import time
@@ -163,7 +164,7 @@ class Agent:
     def resolve(self, name):
         return gevent.spawn(lambda : [self.alerter.resolve(name)])
 
-    def loop(self, count = -1):
+    def loop(self, count=-1):
         base_interval = self.base_interval
         last = time.time()
         while count:
@@ -367,6 +368,9 @@ def monitor_error(name, message='', prefix='', severity=logging.ERROR):
         updated=time.time(),
         )
 
+class Shutdown(Exception):
+    pass
+
 def main(args=None):
     if args is None:
         args = sys.argv[1:]
@@ -377,4 +381,15 @@ def main(args=None):
                         help='number of tests to perform (default unlimited)')
 
     args = parser.parse_args(args)
-    Agent(args.configuration).loop(args.count or -1)
+    agent = Agent(args.configuration)
+
+    def shutdown(sig, frame):
+        raise Shutdown()
+
+    signal.signal(signal.SIGTERM, shutdown)
+
+    try:
+        agent.loop(args.count or -1)
+    except Shutdown:
+        agent.db.remove_agent(agent.name)
+        signal.signal(signal.SIGTERM, signal.SIG_DFL)
