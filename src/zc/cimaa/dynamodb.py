@@ -89,7 +89,7 @@ class DB:
                                      reason=reason,
                                      user=user,
                                      permanent = 'p' if permanent else '',
-                                     time=time.time(),
+                                     time=int(time.time()),
                                      ))
 
     def unsquelch(self, regex):
