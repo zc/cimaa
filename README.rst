@@ -201,11 +201,14 @@ To do
 Changes
 *******
 
+0.4.0 (2015-02-09)
+==================
+
 - Times stored in DynamoDB are converted to integers; sub-second
   resolution isn't needed.
 
 - If a check test returns alternating critical/error states (it's
-  unusual for a test to return critical), the stay critical until it clears.
+  unusual for a test to return critical), it stays critical until it clears.
 
 - Moved stub implementations into ``zc.cimaa.stub`` to make them
   easier to use outside of tests (e.g. when debugging real
