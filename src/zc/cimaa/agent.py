@@ -181,8 +181,13 @@ class Agent:
             count -= 1
 
     def shutdown(self, *args):
-        self.clear()
-        self.db.remove_agent(self.name)
+        # Remove the db so nothing else can touch it:
+        db = self.db
+        del self.db
+        # Remove this agent from the db:
+        db.remove_agent(self.name)
+        # And done:
+        sys.exit(0)
 
     def clear(self):
         signal.signal(signal.SIGTERM, signal.SIG_DFL)

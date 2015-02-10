@@ -559,17 +559,17 @@ controller), it removes itself from the database.
 
 Let's inject a fault:
 
-    >>> agent.db.set_faults(agent.name, [
+    >>> db = agent.db
+    >>> db.set_faults(agent.name, [
+    ...     dict(name=u"some/thing", message=u"bad happened",
+    ...          severity=30, updated=time.time()),
+    ...     ])
+    >>> db.set_faults("notme.example.com", [
     ...     dict(name=u"some/thing", message=u"bad happened",
     ...          severity=30, updated=time.time()),
     ...     ])
 
-    >>> agent.db.set_faults("notme.example.com", [
-    ...     dict(name=u"some/thing", message=u"bad happened",
-    ...          severity=30, updated=time.time()),
-    ...     ])
-
-    >>> pprint(agent.db.faults)
+    >>> pprint(db.faults)
     {'notme.example.com': [{'message': u'bad happened',
                             'name': u'some/thing',
                             'severity': 30,
@@ -581,8 +581,15 @@ Let's inject a fault:
                            'since': 1423582891,
                            'updated': 1423582891}]}
 
-    >>> handler()
-    >>> pprint(agent.db.faults)
+    >>> try:
+    ...     handler()
+    ... except SystemExit as e:
+    ...     pass
+    ... else:
+    ...     print "should not get here"
+    >>> e.code
+    0
+    >>> pprint(db.faults)
     {'notme.example.com': [{'message': u'bad happened',
                             'name': u'some/thing',
                             'severity': 30,
