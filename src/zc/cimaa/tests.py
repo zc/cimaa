@@ -77,18 +77,25 @@ def setUp(test):
     setupstack.context_manager(
         test, mock.patch('socket.getfqdn', return_value='test.example.com'))
 
-    setupstack.context_manager(test, mock.patch('logging.basicConfig'))
-    setupstack.context_manager(test, mock.patch('logging.getLogger'))
-    setupstack.context_manager(
-        test, mock.patch('raven.handlers.logging.SentryHandler'))
-    setupstack.context_manager(test, mock.patch('ZConfig.configureLoggers'))
     global meta_db
     meta_db = zc.cimaa.stub.MemoryDB({})
     setupstack.context_manager(
         test, mock.patch('getpass.getuser', lambda: 'tester'))
 
-def setUpTime(test):
+def setUpLogging(test):
     setUp(test)
+    setupstack.context_manager(test, mock.patch('logging.basicConfig'))
+    setupstack.context_manager(test, mock.patch('logging.getLogger'))
+    setupstack.context_manager(
+        test, mock.patch('raven.handlers.logging.SentryHandler'))
+    setupstack.context_manager(test, mock.patch('ZConfig.configureLoggers'))
+
+def setUpDynamoDB(test):
+    setUp(test)
+    setupstack.context_manager(test, mock.patch('time.sleep'))
+
+def setUpTime(test):
+    setUpLogging(test)
     globs = test.globs
     globs['now'] = 1418487287.82
     setupstack.context_manager(
@@ -110,7 +117,7 @@ def test_suite():
                     ])
                 ) + manuel.capture.Manuel(),
             'agent.rst', 'meta.rst', 'schedule.rst', 'squelch.rst',
-            setUp=setUp, tearDown=setupstack.tearDown),
+            setUp=setUpLogging, tearDown=setupstack.tearDown),
         manuel.testing.TestSuite(
             manuel.doctest.Manuel(
                 optionflags=optionflags,
@@ -129,11 +136,12 @@ def test_suite():
                 manuel.doctest.Manuel(
                     optionflags=optionflags,
                     checker=renormalizing.OutputChecker([
-                        (re.compile(time_pat), "T")
+                        (re.compile(r"waiting \d\.\d+"), "DELAY"),
+                        (re.compile(time_pat), "T"),
                         ])
                     ) + manuel.capture.Manuel(),
                 'dynamodb.rst',
-                setUp=setUp, tearDown=setupstack.tearDown),
+                setUp=setUpDynamoDB, tearDown=setupstack.tearDown),
             )
     if 'SLACK_TOKEN' in os.environ:
         suite.addTest(
