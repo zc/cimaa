@@ -81,6 +81,8 @@ handler:
     2014-12-13T16:14:47.820000 //test.example.com/test/foo.txt#speed 99 rpm
     2014-12-13T10:28:31 //test.example.com/test/foo.txt#loudness 11
 
+    >>> agent.clear()
+
 Thresholds
 ==========
 
@@ -164,6 +166,8 @@ Normally, performance data is ignored:
                            'since': 1418487287.82,
                            'updated': 1418487287.82}]}
 
+    >>> agent.clear()
+
 If we want parsing of performance data, we need to use the
 ``nagios_performance`` option in the check definition:
 ::
@@ -193,6 +197,8 @@ If we want parsing of performance data, we need to use the
     2014-12-13T16:14:47.820000 //test.example.com/test/foo.txt#loudness 0.0
     >>> print agent.db
     {'test.example.com': []}
+
+    >>> agent.clear()
 
 Logging metrics handler
 ========================

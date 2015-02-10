@@ -65,6 +65,8 @@ class Agent:
                         section = '//%s/%s/%s' % (aname, fname, section)
                     checks.append(Check(section, config))
 
+        signal.signal(signal.SIGTERM, self.shutdown)
+
     def _set_critical(self, faults):
         self.critical = dict(
             (f['name'], f['message'] if f.get('triggered') else -1)
@@ -177,6 +179,13 @@ class Agent:
             gevent.sleep(base_interval * (1 - (tick - itick)))
             self.perform(itick + 1)
             count -= 1
+
+    def shutdown(self, *args):
+        self.clear()
+        self.db.remove_agent(self.name)
+
+    def clear(self):
+        signal.signal(signal.SIGTERM, signal.SIG_DFL)
 
     def metric(self, name, value, units, timestamp):
         pass
@@ -368,12 +377,6 @@ def monitor_error(name, message='', prefix='', severity=logging.ERROR):
         updated=time.time(),
         )
 
-class Shutdown(Exception):
-
-    @staticmethod
-    def now(*args):
-        raise Shutdown()
-
 def main(args=None):
     if args is None:
         args = sys.argv[1:]
@@ -384,12 +387,4 @@ def main(args=None):
                         help='number of tests to perform (default unlimited)')
 
     args = parser.parse_args(args)
-    agent = Agent(args.configuration)
-
-    signal.signal(signal.SIGTERM, Shutdown.now)
-
-    try:
-        agent.loop(args.count or -1)
-    except Shutdown:
-        signal.signal(signal.SIGTERM, signal.SIG_DFL)
-        agent.db.remove_agent(agent.name)
+    Agent(args.configuration).loop(args.count or -1)

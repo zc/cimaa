@@ -382,6 +382,8 @@ for severities:
                            'triggered': 'y',
                            'updated': 1418152356.481507}]}
 
+    >>> agent.clear()
+
 Alert failures
 ==============
 
@@ -471,6 +473,8 @@ Same handling of timeout/errors on resolve:
                            'updated': 1418152356.978025}]}
 
 
+    >>> agent.clear()
+
 Loading state on startup
 ========================
 
@@ -514,6 +518,83 @@ agents update faults.  They expose an old_agents method:
     []
     >>> pprint(agent.db.old_agents(0))
     [{'name': 'test.example.com', 'updated': 1418152356.978025}]
+
+    >>> agent.clear()
+
+
+Cleaning up on SIGTERM
+======================
+
+When an agent is terminated using SIGTERM (as from a zdaemon
+controller), it removes itself from the database.
+
+::
+
+  [agent]
+  directory = agent.d
+  timeout = 1
+
+  [database]
+  class = zc.cimaa.stub:MemoryDB
+
+  [alerter]
+  class = zc.cimaa.stub:OutputAlerter
+
+.. -> src
+
+    >>> with open('agent.cfg', 'w') as f:
+    ...     f.write(src)
+
+    >>> import signal
+    >>> import time
+
+    >>> signal.getsignal(signal.SIGTERM) == signal.SIG_DFL
+    True
+
+    >>> agent = zc.cimaa.agent.Agent('agent.cfg')
+
+    >>> handler = signal.getsignal(signal.SIGTERM)
+    >>> handler == agent.shutdown
+    True
+
+Let's inject a fault:
+
+    >>> agent.db.set_faults(agent.name, [
+    ...     dict(name=u"some/thing", message=u"bad happened",
+    ...          severity=30, updated=time.time()),
+    ...     ])
+
+    >>> agent.db.set_faults("notme.example.com", [
+    ...     dict(name=u"some/thing", message=u"bad happened",
+    ...          severity=30, updated=time.time()),
+    ...     ])
+
+    >>> pprint(agent.db.faults)
+    {'notme.example.com': [{'message': u'bad happened',
+                            'name': u'some/thing',
+                            'severity': 30,
+                            'since': 1423582891,
+                            'updated': 1423582891}],
+     'test.example.com': [{'message': u'bad happened',
+                           'name': u'some/thing',
+                           'severity': 30,
+                           'since': 1423582891,
+                           'updated': 1423582891}]}
+
+    >>> handler()
+    >>> pprint(agent.db.faults)
+    {'notme.example.com': [{'message': u'bad happened',
+                            'name': u'some/thing',
+                            'severity': 30,
+                            'since': 1423582891,
+                            'updated': 1423582891}]}
+
+The clear method clears out the signal handler:
+
+    >>> agent.clear()
+    >>> signal.getsignal(signal.SIGTERM) == signal.SIG_DFL
+    True
+
 
 Other configuration options
 ===========================
@@ -582,6 +663,8 @@ For example::
    >>> agent.name
    'test.cimaa.org'
 
+   >>> agent.clear()
+
 Or::
 
 
@@ -609,3 +692,5 @@ Or::
    >>> _ = logging.basicConfig.assert_not_called()
    >>> import ZConfig
    >>> ZConfig.configureLoggers.assert_called_with('\n<logger>\n</logger>')
+
+   >>> agent.clear()

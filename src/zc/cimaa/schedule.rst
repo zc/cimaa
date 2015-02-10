@@ -203,6 +203,8 @@ Let's see loop calls perform correctly:
     ...     if ticks[i] - ticks[i-1] != 1:
     ...         print 'bad'
 
+    >>> agent.clear()
+
 Putting it together
 ===================
 
@@ -234,3 +236,5 @@ There's an entry point for running the agent:
     >>> main(['agent.cfg', '-n10'])
     OutputAlerter trigger //test.example.com/test/foo.txt
     'foo.txt' doesn't exist
+
+    >>> agent.clear()
