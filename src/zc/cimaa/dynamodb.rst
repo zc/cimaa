@@ -248,11 +248,11 @@ data:
     zc.cimaa.dynamodb ERROR
       hit dynamodb throughput limit (reading)
     zc.cimaa.dynamodb WARNING
-      exceeded provisioned throughput (reading); waiting 4.23542 seconds
+      exceeded provisioned throughput; waiting 4.23542 seconds
     zc.cimaa.dynamodb ERROR
       hit dynamodb throughput limit (reading)
     zc.cimaa.dynamodb WARNING
-      exceeded provisioned throughput (reading); waiting 0.2344 seconds
+      exceeded provisioned throughput; waiting 0.2344 seconds
 
     >>> loghandler.clear()
 
@@ -268,19 +268,19 @@ We won't wait forever, though; if it's that bad, we'll still fail:
     zc.cimaa.dynamodb ERROR
       hit dynamodb throughput limit (reading)
     zc.cimaa.dynamodb WARNING
-      exceeded provisioned throughput (reading); waiting 7.75477721994 seconds
+      exceeded provisioned throughput; waiting 7.75477721994 seconds
     zc.cimaa.dynamodb ERROR
       hit dynamodb throughput limit (reading)
     zc.cimaa.dynamodb WARNING
-      exceeded provisioned throughput (reading); waiting 0.394166737729 seconds
+      exceeded provisioned throughput; waiting 0.394166737729 seconds
     zc.cimaa.dynamodb ERROR
       hit dynamodb throughput limit (reading)
     zc.cimaa.dynamodb WARNING
-      exceeded provisioned throughput (reading); waiting 8.95004687846 seconds
+      exceeded provisioned throughput; waiting 8.95004687846 seconds
     zc.cimaa.dynamodb ERROR
       hit dynamodb throughput limit (reading)
     zc.cimaa.dynamodb WARNING
-      exceeded provisioned throughput (reading); waiting 7.63829566361 seconds
+      exceeded provisioned throughput; waiting 7.63829566361 seconds
     zc.cimaa.dynamodb ERROR
       hit dynamodb throughput limit (reading); no more attempts
 
@@ -299,11 +299,11 @@ We'll also make repeated attempts to write to DynamoDB:
     zc.cimaa.dynamodb ERROR
       hit dynamodb throughput limit (writing)
     zc.cimaa.dynamodb WARNING
-      exceeded provisioned throughput (writing); waiting 4.23542 seconds
+      exceeded provisioned throughput; waiting 4.23542 seconds
     zc.cimaa.dynamodb ERROR
       hit dynamodb throughput limit (writing)
     zc.cimaa.dynamodb WARNING
-      exceeded provisioned throughput (writing); waiting 0.2344 seconds
+      exceeded provisioned throughput; waiting 0.2344 seconds
 
     >>> loghandler.clear()
 
@@ -319,11 +319,11 @@ As with reads, we won't wait forever:
     zc.cimaa.dynamodb ERROR
       hit dynamodb throughput limit (writing)
     zc.cimaa.dynamodb WARNING
-      exceeded provisioned throughput (writing); waiting 4.23542 seconds
+      exceeded provisioned throughput; waiting 4.23542 seconds
     zc.cimaa.dynamodb ERROR
       hit dynamodb throughput limit (writing)
     zc.cimaa.dynamodb WARNING
-      exceeded provisioned throughput (writing); waiting 0.2344 seconds
+      exceeded provisioned throughput; waiting 0.2344 seconds
     zc.cimaa.dynamodb ERROR
       hit dynamodb throughput limit (writing); no more attempts
 
