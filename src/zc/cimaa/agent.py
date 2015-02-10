@@ -369,7 +369,10 @@ def monitor_error(name, message='', prefix='', severity=logging.ERROR):
         )
 
 class Shutdown(Exception):
-    pass
+
+    @staticmethod
+    def now(*args):
+        raise Shutdown()
 
 def main(args=None):
     if args is None:
@@ -383,13 +386,10 @@ def main(args=None):
     args = parser.parse_args(args)
     agent = Agent(args.configuration)
 
-    def shutdown(sig, frame):
-        raise Shutdown()
-
-    signal.signal(signal.SIGTERM, shutdown)
+    signal.signal(signal.SIGTERM, Shutdown.now)
 
     try:
         agent.loop(args.count or -1)
     except Shutdown:
-        agent.db.remove_agent(agent.name)
         signal.signal(signal.SIGTERM, signal.SIG_DFL)
+        agent.db.remove_agent(agent.name)
