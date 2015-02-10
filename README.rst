@@ -201,6 +201,8 @@ To do
 Changes
 *******
 
+- Automatically remove the agent from the database on SIGTERM.
+
 0.4.1 (2015-02-09)
 ==================
 
