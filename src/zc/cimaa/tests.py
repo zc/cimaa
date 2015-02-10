@@ -90,7 +90,7 @@ def setUpLogging(test):
         test, mock.patch('raven.handlers.logging.SentryHandler'))
     setupstack.context_manager(test, mock.patch('ZConfig.configureLoggers'))
 
-def setUpDynamoDB(test):
+def setUpWithoutLogging(test):
     setUp(test)
     setupstack.context_manager(test, mock.patch('time.sleep'))
 
@@ -141,7 +141,7 @@ def test_suite():
                         ])
                     ) + manuel.capture.Manuel(),
                 'dynamodb.rst',
-                setUp=setUpDynamoDB, tearDown=setupstack.tearDown),
+                setUp=setUpWithoutLogging, tearDown=setupstack.tearDown),
             )
     if 'SLACK_TOKEN' in os.environ:
         suite.addTest(
