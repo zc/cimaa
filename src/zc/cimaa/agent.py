@@ -177,7 +177,11 @@ class Agent:
             tick = now / base_interval
             itick = int(tick)
             gevent.sleep(base_interval * (1 - (tick - itick)))
-            self.perform(itick + 1)
+            try:
+                self.perform(itick + 1)
+            except Exception:
+                logger.exception("calling perform from loop:")
+                raise
             count -= 1
 
     def shutdown(self, *args):

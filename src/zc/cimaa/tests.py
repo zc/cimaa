@@ -124,6 +124,12 @@ def test_suite():
                 ) + manuel.capture.Manuel(),
             'metrics.rst',
             setUp=setUpTime, tearDown=setupstack.tearDown),
+        manuel.testing.TestSuite(
+            manuel.doctest.Manuel(
+                optionflags=optionflags,
+                ) + manuel.capture.Manuel(),
+            'agent-loop.rst',
+            setUp=setUpWithoutLogging, tearDown=setupstack.tearDown),
         doctest.DocTestSuite('zc.cimaa.nagiosperf', optionflags=optionflags),
         doctest.DocTestSuite('zc.cimaa.threshold',
                              optionflags=optionflags,
