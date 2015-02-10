@@ -78,6 +78,13 @@ class IDB(zope.interface.Interface):
     def unsquelch(regex):
         "Remove a squelch"
 
+    def remove_agent(agent):
+        """Remove the agent from the database.
+
+        This should be used when removing a host from a cluster as part
+        of a termination procedure.
+        """
+
 class IAlerter(zope.interface.Interface):
     """Interface for triggering and resolving alerts.
     """

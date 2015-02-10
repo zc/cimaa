@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import re
+import signal
 import socket
 import sys
 import time
@@ -63,6 +64,8 @@ class Agent:
                     if not section.startswith('//'):
                         section = '//%s/%s/%s' % (aname, fname, section)
                     checks.append(Check(section, config))
+
+        signal.signal(signal.SIGTERM, self.shutdown)
 
     def _set_critical(self, faults):
         self.critical = dict(
@@ -163,7 +166,7 @@ class Agent:
     def resolve(self, name):
         return gevent.spawn(lambda : [self.alerter.resolve(name)])
 
-    def loop(self, count = -1):
+    def loop(self, count=-1):
         base_interval = self.base_interval
         last = time.time()
         while count:
@@ -176,6 +179,18 @@ class Agent:
             gevent.sleep(base_interval * (1 - (tick - itick)))
             self.perform(itick + 1)
             count -= 1
+
+    def shutdown(self, *args):
+        # Remove the db so nothing else can touch it:
+        db = self.db
+        del self.db
+        # Remove this agent from the db:
+        db.remove_agent(self.name)
+        # And done:
+        sys.exit(0)
+
+    def clear(self):
+        signal.signal(signal.SIGTERM, signal.SIG_DFL)
 
     def metric(self, name, value, units, timestamp):
         pass

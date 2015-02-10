@@ -48,6 +48,12 @@ class MemoryDB:
     def unsquelch(self, regex):
         del self.squelches[regex]
 
+    def remove_agent(self, agent):
+        if agent in self.agents:
+            del self.agents[agent]
+        if agent in self.faults:
+            del self.faults[agent]
+
     def __str__(self):
         return pprint.pformat(self.faults)
 

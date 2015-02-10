@@ -56,7 +56,11 @@ class DB:
 
         with self.faults.batch_write() as batch:
             # Heartbeat
-            batch.put_item(dict(agent='_', name=agent, updated=int(time.time())))
+            batch.put_item(dict(
+                agent='_',
+                name=agent,
+                updated=int(time.time()),
+                ))
 
             for fault in faults:
                 data = fault.copy()
@@ -94,6 +98,22 @@ class DB:
 
     def unsquelch(self, regex):
         self.squelches.delete_item(regex=regex)
+
+    def remove_agent(self, agent):
+        faults = self.last_faults.get(agent)
+        if faults is None:
+            self.get_faults(agent)
+            faults = self.last_faults.get(agent)
+
+        with self.faults.batch_write() as batch:
+            # Heartbeat
+            batch.delete_item(agent='_', name=agent)
+
+            for fault in faults:
+                batch.delete_item(agent=agent, name=fault)
+
+        if agent in self.last_faults:
+            del self.last_faults[agent]
 
     def dump(self, name=None):
         return dict(
