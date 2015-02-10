@@ -262,7 +262,7 @@ We won't wait forever, though; if it's that bad, we'll still fail:
     ...                zc.cimaa.dynamodb.READ_ATTEMPTS):
     ...     db.get_faults("agent")
     Traceback (most recent call last):
-    RuntimeError: could not read from dynamodb in 5 tries
+    RuntimeError: error reading dynamodb in 5 tries
 
     >>> print loghandler
     zc.cimaa.dynamodb ERROR
@@ -282,9 +282,7 @@ We won't wait forever, though; if it's that bad, we'll still fail:
     zc.cimaa.dynamodb WARNING
       exceeded provisioned throughput (reading); waiting 7.63829566361 seconds
     zc.cimaa.dynamodb ERROR
-      hit dynamodb throughput limit (reading)
-    zc.cimaa.dynamodb ERROR
-      could not read state for agent from dynamodb
+      hit dynamodb throughput limit (reading); no more attempts
 
     >>> loghandler.clear()
 
@@ -315,7 +313,7 @@ As with reads, we won't wait forever:
     ...                zc.cimaa.dynamodb.WRITE_ATTEMPTS):
     ...     db.set_faults("agent", [])
     Traceback (most recent call last):
-    RuntimeError: could not update dynamodb in 3 tries
+    RuntimeError: error writing dynamodb in 3 tries
 
     >>> print loghandler
     zc.cimaa.dynamodb ERROR
@@ -327,9 +325,7 @@ As with reads, we won't wait forever:
     zc.cimaa.dynamodb WARNING
       exceeded provisioned throughput (writing); waiting 0.2344 seconds
     zc.cimaa.dynamodb ERROR
-      hit dynamodb throughput limit (writing)
-    zc.cimaa.dynamodb ERROR
-      could not write updates for agent to dynamodb
+      hit dynamodb throughput limit (writing); no more attempts
 
     >>> loghandler.clear()
 

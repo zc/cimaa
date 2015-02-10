@@ -51,25 +51,11 @@ class DB:
                     index='updated', agent__eq='_', updated__lt=max_updated)]
 
     def get_faults(self, agent):
-        for i in range(READ_ATTEMPTS - 1):
-            try:
-                faults = [_fault_data(item)
-                          for item in self.faults.query_2(agent__eq=agent)]
-                break
-            except dynamodb2.exceptions.ProvisionedThroughputExceededException:
-                # For Sentry:
-                logger.exception("hit dynamodb throughput limit (reading)")
-                _wait("reading")
-        else:
-            try:
-                faults = [_fault_data(item)
-                          for item in self.faults.query_2(agent__eq=agent)]
-            except dynamodb2.exceptions.ProvisionedThroughputExceededException:
-                # For Sentry:
-                logger.exception("hit dynamodb throughput limit (reading)")
-                logger.error("could not read state for %s from dynamodb", agent)
-                raise RuntimeError("could not read from dynamodb in %s tries"
-                                   % READ_ATTEMPTS)
+        @retry(READ_ATTEMPTS, "reading")
+        def faults():
+            return [_fault_data(item)
+                    for item in self.faults.query_2(agent__eq=agent)]
+
         self.last_faults[agent] = set(fault['name'] for fault in faults)
         return faults
 
@@ -79,25 +65,10 @@ class DB:
             self.get_faults(agent)
             old_faults = self.last_faults.get(agent)
 
-        for i in range(WRITE_ATTEMPTS - 1):
-            try:
-                self._set_faults(agent, faults, old_faults)
-                break
-            except dynamodb2.exceptions.ProvisionedThroughputExceededException:
-                # For Sentry:
-                logger.exception("hit dynamodb throughput limit (writing)")
-                _wait("writing")
-        else:
-            try:
-                self._set_faults(agent, faults, old_faults)
-            except dynamodb2.exceptions.ProvisionedThroughputExceededException:
-                # For Sentry:
-                logger.exception("hit dynamodb throughput limit (writing)")
-                logger.error(
-                    "could not write updates for %s to dynamodb", agent)
-                raise RuntimeError("could not update dynamodb in %s tries"
-                                   % WRITE_ATTEMPTS)
-            
+        @retry(WRITE_ATTEMPTS, "writing")
+        def write_faults():
+            self._set_faults(agent, faults, old_faults)
+
         self.last_faults[agent] = set(fault['name'] for fault in faults)
 
     def _set_faults(self, agent, faults, old_faults):
@@ -173,12 +144,36 @@ class DB:
                 key=lambda item: ['regex']),
             )
 
-def _wait(doing_what):
-    r = random.random() * 9
-    logger.warning(
-        "exceeded provisioned throughput (%s); waiting %s seconds",
-        doing_what, r)
-    time.sleep(r)
+def retry(attempts, doing_what):
+    from boto.dynamodb2.exceptions import ProvisionedThroughputExceededException
+
+    def decorator(function):
+
+        def retry_worker(*args, **kw):
+            for i in range(attempts - 1):
+                try:
+                    return function(*args, **kw)
+                except ProvisionedThroughputExceededException:
+                    # For Sentry:
+                    logger.exception(
+                        "hit dynamodb throughput limit (%s)", doing_what)
+                    r = random.random() * 9
+                    logger.warning(
+                        "exceeded provisioned throughput; waiting %s seconds",
+                        r)
+                    time.sleep(r)
+            try:
+                return function(*args, **kw)
+            except ProvisionedThroughputExceededException:
+                logger.exception(
+                    "hit dynamodb throughput limit (%s); no more attempts",
+                    doing_what)
+                raise RuntimeError("error %s dynamodb in %s tries"
+                                   % (doing_what, attempts))
+
+        return retry_worker()
+
+    return decorator
 
 def _fault_data(item):
     data = dict(item.items())
