@@ -201,6 +201,13 @@ To do
 Changes
 *******
 
+- Retry DynamoDB operations when exceeding the provisioned number of
+  operations, ensuring Sentry alerts are generated when Sentry is
+  configured.
+
+- Make all uncaught exceptions from Agent.perform get reported in a
+  Sentry visible way.
+
 0.5.0 (2015-02-10)
 ==================
 

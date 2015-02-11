@@ -5,9 +5,17 @@ import boto.dynamodb2.exceptions
 import boto.dynamodb2.fields
 import boto.dynamodb2.table
 import boto.dynamodb2.types
+import logging
+import random
 import sys
 import time
 import zc.cimaa.parser
+
+
+READ_ATTEMPTS = 5
+WRITE_ATTEMPTS = 3
+
+logger = logging.getLogger(__name__)
 
 schemas = dict(
     squelches=dict(schema=[dynamodb2.fields.HashKey('regex')]),
@@ -43,8 +51,11 @@ class DB:
                     index='updated', agent__eq='_', updated__lt=max_updated)]
 
     def get_faults(self, agent):
-        faults = [_fault_data(item)
-                  for item in self.faults.query_2(agent__eq=agent)]
+        @retry(READ_ATTEMPTS, "reading")
+        def faults():
+            return [_fault_data(item)
+                    for item in self.faults.query_2(agent__eq=agent)]
+
         self.last_faults[agent] = set(fault['name'] for fault in faults)
         return faults
 
@@ -54,7 +65,15 @@ class DB:
             self.get_faults(agent)
             old_faults = self.last_faults.get(agent)
 
+        @retry(WRITE_ATTEMPTS, "writing")
+        def write_faults():
+            self._set_faults(agent, faults, old_faults)
+
+        self.last_faults[agent] = set(fault['name'] for fault in faults)
+
+    def _set_faults(self, agent, faults, old_faults):
         with self.faults.batch_write() as batch:
+            #print batch.__class__
             # Heartbeat
             batch.put_item(dict(
                 agent='_',
@@ -69,8 +88,6 @@ class DB:
                 old_faults.discard(data['name'])
             for name in old_faults:
                 batch.delete_item(agent=agent, name=name)
-
-        self.last_faults[agent] = set(fault['name'] for fault in faults)
 
     def get_squelch(self, regex):
         try:
@@ -126,6 +143,32 @@ class DB:
                  for item in self.squelches.scan()),
                 key=lambda item: ['regex']),
             )
+
+def retry(attempts, doing_what):
+    from boto.dynamodb2.exceptions import ProvisionedThroughputExceededException
+
+    def decorator(function):
+        for i in range(attempts - 1):
+            try:
+                return function()
+            except ProvisionedThroughputExceededException:
+                # For Sentry:
+                logger.exception(
+                    "hit dynamodb throughput limit (%s)", doing_what)
+                r = random.random() * 9
+                logger.warning(
+                    "exceeded provisioned throughput; waiting %s seconds", r)
+                time.sleep(r)
+        try:
+            return function()
+        except ProvisionedThroughputExceededException:
+            logger.exception(
+                "hit dynamodb throughput limit (%s); no more attempts",
+                doing_what)
+            raise RuntimeError("error %s dynamodb in %s tries"
+                               % (doing_what, attempts))
+
+    return decorator
 
 def _fault_data(item):
     data = dict(item.items())
