@@ -201,6 +201,9 @@ To do
 Changes
 *******
 
+0.5.1 (2015-02-11)
+==================
+
 - Retry DynamoDB operations when exceeding the provisioned number of
   operations, ensuring Sentry alerts are generated when Sentry is
   configured.
