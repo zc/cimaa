@@ -148,30 +148,25 @@ def retry(attempts, doing_what):
     from boto.dynamodb2.exceptions import ProvisionedThroughputExceededException
 
     def decorator(function):
-
-        def retry_worker(*args, **kw):
-            for i in range(attempts - 1):
-                try:
-                    return function(*args, **kw)
-                except ProvisionedThroughputExceededException:
-                    # For Sentry:
-                    logger.exception(
-                        "hit dynamodb throughput limit (%s)", doing_what)
-                    r = random.random() * 9
-                    logger.warning(
-                        "exceeded provisioned throughput; waiting %s seconds",
-                        r)
-                    time.sleep(r)
+        for i in range(attempts - 1):
             try:
-                return function(*args, **kw)
+                return function()
             except ProvisionedThroughputExceededException:
+                # For Sentry:
                 logger.exception(
-                    "hit dynamodb throughput limit (%s); no more attempts",
-                    doing_what)
-                raise RuntimeError("error %s dynamodb in %s tries"
-                                   % (doing_what, attempts))
-
-        return retry_worker()
+                    "hit dynamodb throughput limit (%s)", doing_what)
+                r = random.random() * 9
+                logger.warning(
+                    "exceeded provisioned throughput; waiting %s seconds", r)
+                time.sleep(r)
+        try:
+            return function()
+        except ProvisionedThroughputExceededException:
+            logger.exception(
+                "hit dynamodb throughput limit (%s); no more attempts",
+                doing_what)
+            raise RuntimeError("error %s dynamodb in %s tries"
+                               % (doing_what, attempts))
 
     return decorator
 
