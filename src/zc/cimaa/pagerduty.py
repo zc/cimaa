@@ -16,6 +16,8 @@ class Alerter:
         self.service = config['service']
 
     def _event(self, event_type, name, description):
+        if description and len(description) > 1024:
+            description = description[:500] + "\n\n...\n\n" + description[-500:]
         resp = grequests.post(
             api_url,
             data = json.dumps(dict(

@@ -201,6 +201,8 @@ To do
 Changes
 *******
 
+- Restrict the length of descriptions passed to PagerDuty.
+
 0.5.1 (2015-02-11)
 ==================
 
