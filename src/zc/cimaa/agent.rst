@@ -674,7 +674,6 @@ For example::
 
 Or::
 
-
   [agent]
   directory = agent.d
   alert_timeout = 42
@@ -701,3 +700,76 @@ Or::
    >>> ZConfig.configureLoggers.assert_called_with('\n<logger>\n</logger>')
 
    >>> agent.clear()
+
+
+Exceptions during startup
+=========================
+
+If there's an exception during the agent's startup, it will be reported
+to Sentry::
+
+   [agent]
+   directory = agent.d
+   name = test.cimaa.org
+   base_interval = this-is-not-a-number
+   logging = warning
+   sentry_dsn = http://public:secret@example.com/1
+
+   [database]
+   class = zc.cimaa.stub:MemoryDB
+
+   [alerter]
+   class = zc.cimaa.stub:OutputAlerter
+
+.. -> src
+
+   >>> with open('agent.cfg', 'w') as f:
+   ...     f.write(src)
+
+   >>> raven.handlers.logging.SentryHandler.reset_mock()
+
+   >>> import mock
+   >>> with mock.patch("zc.cimaa.agent.logger") as mock_logger:
+   ...     zc.cimaa.agent.Agent('agent.cfg')
+   Traceback (most recent call last):
+     ...
+   ValueError: could not convert string to float: this-is-not-a-number
+
+   >>> mock_logger.exception.assert_called_with(
+   ...     "Encountered exception during startup:")
+
+If there's an error in a single configuration file for a check, a
+synthetic check is generated that always returns a critical error.
+Let's use a reasonable configuration::
+
+   [agent]
+   directory = agent.d
+   name = test.cimaa.org
+   logging = warning
+
+   [database]
+   class = zc.cimaa.stub:MemoryDB
+
+   [alerter]
+   class = zc.cimaa.stub:OutputAlerter
+
+.. -> src
+
+   >>> with open('agent.cfg', 'w') as f:
+   ...     f.write(src)
+
+And a broken check configuration::
+
+   this is just borken
+
+.. -> src
+
+   >>> with open('agent.d/borken.cfg', 'w') as f:
+   ...     f.write(src)
+
+We can create the agent just fine:
+
+   >>> agent = zc.cimaa.agent.Agent('agent.cfg')
+   >>> agent.perform(1)
+   OutputAlerter trigger
+     //test.cimaa.org/borken/ error parsing agent.d/borken.cfg
