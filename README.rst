@@ -201,6 +201,9 @@ To do
 Changes
 *******
 
+0.5.3 (2015-03-10)
+==================
+
 - Report startup errors via configured logging (including Sentry)
   instead of letting them get quietly ignored in log files.
 
