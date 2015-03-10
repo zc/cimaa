@@ -39,33 +39,44 @@ class Agent:
             handler.setLevel(logging.ERROR)
             logging.getLogger().addHandler(handler)
 
-        aname = self.name = options.get('name', socket.getfqdn())
-        self.base_interval = float(options.get('base_interval', 60.0))
-        self.timeout = float(options.get('timeout', self.base_interval * .7))
-        self.alert_timeout = float(options.get('alert_timeout',
-                                               self.base_interval * .2))
+        try:
+            aname = self.name = options.get('name', socket.getfqdn())
+            self.base_interval = float(options.get('base_interval', 60.0))
+            self.timeout = float(
+                options.get('timeout', self.base_interval * .7))
+            self.alert_timeout = float(
+                options.get('alert_timeout', self.base_interval * .2))
 
-        self.db = zc.cimaa.parser.load_handler(config['database'])
-        self.alerter = zc.cimaa.parser.load_handler(config['alerter'])
-        if 'metrics' in config:
-            self.metric = zc.cimaa.parser.load_handler(config['metrics'])
+            self.db = zc.cimaa.parser.load_handler(config['database'])
+            self.alerter = zc.cimaa.parser.load_handler(config['alerter'])
+            if 'metrics' in config:
+                self.metric = zc.cimaa.parser.load_handler(config['metrics'])
 
-        self._set_critical(self.db.get_faults(self.name))
+            self._set_critical(self.db.get_faults(self.name))
 
-        directory = options['directory']
-        self.checks = checks = []
-        for name in os.listdir(directory):
-            if name.endswith('.cfg'):
-                cparser = zc.cimaa.parser.parse_file(
-                    os.path.join(directory, name))
-                fname = name[:-4]
-                for section in cparser:
-                    config = dict(cparser[section])
-                    if not section.startswith('//'):
-                        section = '//%s/%s/%s' % (aname, fname, section)
-                    checks.append(Check(section, config))
+            directory = options['directory']
+            self.checks = checks = []
+            for name in os.listdir(directory):
+                if name.endswith('.cfg'):
+                    path = os.path.join(directory, name)
+                    fname = name[:-4]
+                    prefix = '//%s/%s/' % (aname, fname)
+                    try:
+                        cparser = zc.cimaa.parser.parse_file(path)
+                    except zc.cimaa.parser.Error:
+                        checks.append(BadCheck(prefix, path))
+                    else:
+                        for section in cparser:
+                            config = dict(cparser[section])
+                            if not section.startswith('//'):
+                                section = prefix + section
+                            checks.append(Check(section, config))
 
-        signal.signal(signal.SIGTERM, self.shutdown)
+            signal.signal(signal.SIGTERM, self.shutdown)
+
+        except Exception:
+            logger.exception("Encountered exception during startup:")
+            raise
 
     def _set_critical(self, faults):
         self.critical = dict(
@@ -373,6 +384,29 @@ class Check:
 
     def thresholds(self, result):
         pass
+
+
+class BadCheck(Check):
+
+    retry = 0
+    chances = 1
+
+    def __init__(self, name, path):
+        self.name = name
+        self.path = path
+
+    def should_run(self, minute):
+        return True
+
+    def perform(self):
+        return dict(faults=[
+            dict(
+                message="error parsing %s" % self.path,
+                severity=logging.CRITICAL,
+                updated=time.time(),
+                ),
+            ])
+
 
 severity_names = dict(warning=logging.WARNING,
                       error=logging.ERROR,

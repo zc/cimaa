@@ -201,6 +201,12 @@ To do
 Changes
 *******
 
+- Report startup errors via configured logging (including Sentry)
+  instead of letting them get quietly ignored in log files.
+
+- Report errors parsing check configurations as monitored failures,
+  always critical, without causing the agent to exit.
+
 0.5.2 (2015-02-24)
 ==================
 

@@ -1,5 +1,6 @@
 """Parse ConfigParser data into dicts
 """
+from ConfigParser import Error
 import ConfigParser
 
 def parse_text(text):
