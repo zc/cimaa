@@ -74,8 +74,11 @@ retry
 retry_interval
   How quickly to retry. Defaults to 1.
 
+thresholds
+  Threshold tests for metrics reporter by the check.
+
 (In the future, we might add additional options for accessing sockets
-rather than running commands, for setting metrics thresholds, etc.)
+rather than running commands, etc.)
 
 Now, let's create an agent:
 
