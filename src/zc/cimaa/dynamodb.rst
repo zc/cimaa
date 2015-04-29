@@ -93,20 +93,23 @@ And perform some operations:
                 {u'agent': u'agent',
                  u'message': u'',
                  u'name': u'blank',
-                 u'severity': 50},
+                 u'severity': 50,
+                 u'since': T},
                 {u'agent': u'agent',
                  u'message': u'f2 is bad',
                  u'name': u'f2',
-                 u'severity': 40},
+                 u'severity': 40,
+                 u'since': T},
                 {u'agent': u'agent',
                  u'message': u'f3 is bad',
                  u'name': u'f3',
                  u'severity': 50,
+                 u'since': T,
                  u'triggered': u'y'}],...
 
-Notice that the faults data includes data for an agent '_'. This is
+Notice that the faults data includes data for an agent '_'.  This is
 heartbeat data that tells us when the agent last ran.  We can use this
-to find old agents:
+to find agents that no longer report:
 
     >>> db.old_agents(900) # agents that haven't run in 15 minutes
     []
@@ -118,15 +121,18 @@ to find old agents:
     [{u'agent': u'agent',
       u'message': u'',
       u'name': u'blank',
-      u'severity': 50},
+      u'severity': 50,
+      u'since': T},
      {u'agent': u'agent',
       u'message': u'f2 is bad',
       u'name': u'f2',
-      u'severity': 40},
+      u'severity': 40,
+      u'since': T},
      {u'agent': u'agent',
       u'message': u'f3 is bad',
       u'name': u'f3',
       u'severity': 50,
+      u'since': T,
       u'triggered': u'y'}]
     >>> db.set_faults('agent', [])
 
@@ -149,7 +155,8 @@ has to ensure that it gets restored to avoid KeyErrors::
     [{u'agent': u'agent',
       u'message': u'',
       u'name': u'blank',
-      u'severity': 50}]
+      u'severity': 50,
+      u'since': T}]
 
 The remove_agent method is used to remove an agent from the database
 completely; both faults and the heartbeat record are removed, while
@@ -169,11 +176,13 @@ records for other agents are not touched:
                 {u'agent': u'tnega',
                  u'message': u'f1 is bad',
                  u'name': u'f1',
-                 u'severity': 40},
+                 u'severity': 40,
+                 u'since': T},
                 {u'agent': u'tnega',
                  u'message': u'f2 is bad',
                  u'name': u'f2',
-                 u'severity': 40}],
+                 u'severity': 40,
+                 u'since': T}],
      'squelches': []}
 
 
