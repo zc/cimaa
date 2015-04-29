@@ -170,17 +170,21 @@ def retry(attempts, doing_what):
 
     return decorator
 
+
+def _convert_tstamp(data, name):
+    if name in data:
+        try:
+            data[name] = int(data[name])
+        except ValueError:
+            # Existing data may be a float, so add a step to the conversion:
+            data[name] = int(float(data[name]))
+
 def _fault_data(item):
     data = dict(item.items())
     # dynamodb doesn't populate keys with empty strings
     if u'message' not in data:
         data[u'message'] = u''
-    if u'updated' in data:
-        try:
-            data[u'updated'] = int(data[u'updated'])
-        except ValueError:
-            # Existing data may be a float, so add a step to the conversion:
-            data[u'updated'] = int(float(data[u'updated']))
+    _convert_tstamp(data, u"updated")
     if u'severity' in data:
         # Ints, not Decimals:
         data[u'severity'] = int(data[u'severity'])
