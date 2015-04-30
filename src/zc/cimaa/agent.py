@@ -64,13 +64,22 @@ class Agent:
                     try:
                         cparser = zc.cimaa.parser.parse_file(path)
                     except zc.cimaa.parser.Error:
-                        checks.append(BadCheck(prefix, path))
+                        checks.append(BadCheck(prefix, path,
+                                               'error parsing %s' % path))
                     else:
                         for section in cparser:
                             config = dict(cparser[section])
-                            if not section.startswith('//'):
-                                section = prefix + section
-                            checks.append(Check(section, config))
+                            if section.startswith('//'):
+                                fullname = section
+                            else:
+                                fullname = prefix + section
+                            try:
+                                checks.append(Check(fullname, config))
+                            except zc.cimaa.parser.Error as e:
+                                checks.append(BadCheck(
+                                    prefix, section,
+                                    'error loading check %s [%s]: %s'
+                                    % (path, section, e)))
 
             signal.signal(signal.SIGTERM, self.shutdown)
 
@@ -224,8 +233,22 @@ class Check:
         if 'thresholds' in config:
             self.thresholds = zc.cimaa.threshold.Thresholds(
                 config['thresholds'])
-        self.parse_nagios = (
-            config.get('nagios_performance', '').lower() == 'true')
+        parse = True
+        if 'nagios_performance' in config:
+            parse = config['nagios_performance'].lower()
+            if parse == 'true':
+                pass
+            elif parse == 'false':
+                if 'thresholds' in config:
+                    raise zc.cimaa.parser.Error(
+                        'nagios_performance can\'t be false'
+                        ' when thresholds are specified')
+                parse = False
+            else:
+                raise zc.cimaa.parser.Error(
+                    'bad value for nagios_performance: %r'
+                    % config['nagios_performance'])
+        self.parse_nagios = parse
 
     def should_run(self, minute):
         interval = self.interval
@@ -391,9 +414,10 @@ class BadCheck(Check):
     retry = 0
     chances = 1
 
-    def __init__(self, name, path):
+    def __init__(self, name, path, message):
         self.name = name
         self.path = path
+        self.message = message
 
     def should_run(self, minute):
         return True
@@ -401,7 +425,7 @@ class BadCheck(Check):
     def perform(self):
         return dict(faults=[
             dict(
-                message="error parsing %s" % self.path,
+                message=self.message,
                 severity=logging.CRITICAL,
                 updated=time.time(),
                 ),

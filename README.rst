@@ -201,6 +201,9 @@ To do
 Changes
 *******
 
+- Parse metrics from Nagios plugin output by default.  If thresholds are
+  specified and metric parsing is disabled, an error is generated.
+
 0.5.3 (2015-03-10)
 ==================
 
