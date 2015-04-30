@@ -38,19 +38,20 @@ class IDB(zope.interface.Interface):
            A message describing the fault.
 
         triggered (optional)
-           Present and true of an alert has been triggered for the fault.
+           Present and true if an alert has been triggered for the fault.
 
            This should be true whenever severity >= logging.CRITICAL,
            unless there's an alerting failure.
 
         updated
-           The time the fault was last updated, as a time.time.
+           For heartbeat records, the time the record was last updated,
+           as a time.time.  May not be present for faults.
 
         since
            The time the fault was last first detected within the
            current string of failures, as a time.time.
 
-           This must be maintained by the .
+           This must be maintained by the data store.
         """
 
     def set_faults(agent, faults):
