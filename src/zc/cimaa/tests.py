@@ -11,6 +11,7 @@
 # FOR A PARTICULAR PURPOSE.
 #
 ##############################################################################
+from json import dumps as original_dumps
 from zope.testing import renormalizing, setupstack
 import doctest
 import gevent
@@ -55,12 +56,10 @@ def setUpSlack(test):
     )
 
 def setUpPP(test):
-    from json import dumps as original_dumps
-    setupstack.context_manager(
-        test,
-        mock.patch('json.dumps',
-                   lambda o: original_dumps(o, sort_keys=True))
-        )
+    # Setting up a function makes it easier to inject pdb.
+    def faux_json_dumps(o, sort_keys=True, **kw):
+        return original_dumps(o, sort_keys=sort_keys, **kw)
+    setupstack.context_manager(test, mock.patch('json.dumps', faux_json_dumps))
     test.globs.update(
         pdb = pdb,
         pprint = pprint.pprint,
@@ -112,8 +111,8 @@ def test_suite():
                 checker=renormalizing.OutputChecker([
                     (re.compile(r"'agents': {'test.example.com': "+time_pat),
                      "'agents': {'test.example.com': "),
-                    (re.compile(r"'since': "+time_pat), 'SINCE'),
-                    (re.compile(r"'updated': "+time_pat), 'UPDATED'),
+                    (re.compile(r"u?'since': "+time_pat), 'SINCE'),
+                    (re.compile(r"u?'updated': "+time_pat), 'UPDATED'),
                     ])
                 ) + manuel.capture.Manuel(),
             'agent.rst', 'meta.rst', 'schedule.rst', 'squelch.rst',

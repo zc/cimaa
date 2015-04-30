@@ -201,6 +201,9 @@ To do
 Changes
 *******
 
+- Support non-escalating faults, and use them for failures in monitors.
+  These should not be used when reporting application failures.
+
 0.5.3 (2015-03-10)
 ==================
 

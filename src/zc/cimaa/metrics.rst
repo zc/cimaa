@@ -155,18 +155,24 @@ Normally, performance data is ignored:
 
     >>> agent.perform(0)
     >>> print agent.db
-    {'test.example.com': [{'message': 'Missing metric (2 of 4)',
+    {'test.example.com': [{'escalates': False,
+                           'message': 'Missing metric',
                            'name': '//test.example.com/test/foo.txt#speed',
                            'severity': 40,
                            'since': 1418487287.82,
                            'updated': 1418487287.82},
-                          {'message': 'Missing metric (2 of 4)',
+                          {'escalates': False,
+                           'message': 'Missing metric',
                            'name': '//test.example.com/test/foo.txt#loudness',
                            'severity': 40,
                            'since': 1418487287.82,
                            'updated': 1418487287.82}]}
 
     >>> agent.clear()
+
+Note that the missing-metrics faults are marked as non-escalating, as
+this is considered a problem with monitoring rather than the application
+being monitored.
 
 If we want parsing of performance data, we need to use the
 ``nagios_performance`` option in the check definition:
