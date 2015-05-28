@@ -201,6 +201,10 @@ To do
 Changes
 *******
 
+- Support non-escalating faults, and use them for failures in monitors.
+  These should not be used when reporting application failures
+  (https://github.com/zc/cimaa/issues/15).
+
 - Parse metrics from Nagios plugin output by default.  If thresholds are
   specified and metric parsing is disabled, an error is generated
   (https://github.com/zc/cimaa/issues/12).

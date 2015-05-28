@@ -1,12 +1,13 @@
 """Threshold handling
 
-Required thresholds fault if no metric:
+Required thresholds fault if there's no value for metric, but the fault
+will not escalate:
 
     >>> r = Threshold(
     ...     'foo critical > 200 warning > 50 error > 99 clear < 80').check
     >>> r([dict(name='foo', value=42)])
     >>> pp(r([]))
-    {'message': 'Missing metric', 'severity': 40}
+    {'escalates': False, 'message': 'Missing metric', 'severity': 40}
 
     >>> o = Threshold('foo ? warning >= 50 error >= 99').check
     >>> o([dict(name='foo', value=42)])
@@ -94,7 +95,11 @@ class Threshold:
         v = [m for m in metrics if m['name'] == self.name]
         if not v:
             if not self.optional:
-                return dict(severity=logging.ERROR, message='Missing metric')
+                return dict(
+                    escalates=False,
+                    message='Missing metric',
+                    severity=logging.ERROR,
+                    )
             return
         [v] = v
         v = v['value']

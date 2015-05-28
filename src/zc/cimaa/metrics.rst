@@ -166,9 +166,12 @@ Performance data is parsed by default:
 
     >>> agent.clear()
 
-The configuration setting ``nagios_performance`` controls whether
-metrics are parsed from Nagios-style output, and can be specified
-explicitly::
+Note that the missing-metrics faults are marked as non-escalating, as
+this is considered a problem with monitoring rather than the application
+being monitored.
+
+If we want parsing of performance data, we need to use the
+``nagios_performance`` option in the check definition::
 
   [foo.txt]
   command = PY filecheck.py foo.txt
@@ -183,8 +186,6 @@ explicitly::
     >>> with open(os.path.join('agent.d', 'test.cfg'), 'w') as f:
     ...     f.write(src.replace('PY', sys.executable))
     >>> agent = zc.cimaa.agent.Agent('agent.cfg')
-
-::
 
     >>> agent.perform(0)
     2014-12-13T16:14:47.820000 //test.example.com/test/foo.txt#/ 2643.0 MB

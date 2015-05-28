@@ -394,11 +394,13 @@ class Check:
             self.failures += 1
             if self.failures > self.retry:
                 for f in errors:
-                    f['severity'] = logging.CRITICAL
+                    if f.get('escalates', True):
+                        f['severity'] = logging.CRITICAL
             else:
                 for f in errors:
-                    f['message'] = "%s (%s of %s)" % (
-                        f.get('message', ''), self.failures, self.chances)
+                    if f.get('escalates', True):
+                        f['message'] = "%s (%s of %s)" % (
+                            f.get('message', ''), self.failures, self.chances)
 
         elif not critical:
             self.failures = 0
@@ -438,6 +440,7 @@ severity_names = dict(warning=logging.WARNING,
 
 def monitor_error(name, message='', prefix='', severity=logging.ERROR):
     return dict(
+        escalates=False,
         name=(prefix + 'monitor-' + name),
         message=message,
         severity=severity,

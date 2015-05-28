@@ -175,7 +175,8 @@ Nagios plugin wrote to stderr:
     ...     f.write('stderr')
     >>> agent.perform(0)
     >>> print agent.db
-    {'test.example.com': [{'message': 'what hapenned? (1 of 4)',
+    {'test.example.com': [{'escalates': False,
+                           'message': 'what hapenned?',
                            'name':
                            '//test.example.com/test/foo.txt#monitor-stderr',
                            'severity': 40,
@@ -188,7 +189,8 @@ Nagios plugin didn't write to stdout:
     ...     f.write('noout')
     >>> agent.perform(0)
     >>> print agent.db
-    {'test.example.com': [{'message': ' (2 of 4)',
+    {'test.example.com': [{'escalates': False,
+                           'message': '',
                            'name':
                            '//test.example.com/test/foo.txt#monitor-no-out',
                            'severity': 40,
@@ -201,7 +203,8 @@ Nagios plugin returned a unknown status code:
     ...     f.write('status')
     >>> agent.perform(0)
     >>> print agent.db
-    {'test.example.com': [{'message': "'foo.txt' exists\n (3 of 4)",
+    {'test.example.com': [{'escalates': False,
+                           'message': "'foo.txt' exists\n",
                            'name':
                            '//test.example.com/test/foo.txt#monitor-status',
                            'severity': 40,
@@ -216,6 +219,13 @@ database.  You must provide a reason for the squelch, as well as an
 indication of who created it.  Squelches are set by external
 applications. They record the time at which the squelch was set:
 
+    >>> with open('foo.txt', 'w') as f:
+    ...     f.write('''{"faults": [
+    ...                {"name": "server",
+    ...                 "severity": "error",
+    ...                 "message": "badness"}
+    ...             ]}''')
+
     >>> agent.db.squelch('test', 'testing', 'me')
     >>> pprint(agent.db.squelches)
     {'test': {'permanent': False,
@@ -226,12 +236,11 @@ applications. They record the time at which the squelch was set:
     >>> agent.perform(0)
     >>> agent.perform(0)
     >>> print agent.db
-    {'test.example.com': [{'message': "'foo.txt' exists\n",
-                           'name':
-                           '//test.example.com/test/foo.txt#monitor-status',
-                           'severity': 50,
-                           'since': 1418150724.048694,
-                           'updated': 1418150724.048694}]}
+    {'test.example.com': [{u'message': u'badness',
+                           u'name': u'//test.example.com/test/foo.txt#server',
+                           u'severity': 50,
+                           u'since': 1418150724.048694,
+                           u'updated': 1418150724.048694}]}
 
 Here, we didn't get an alert, even though we has a critical fault.
 
@@ -239,8 +248,7 @@ We'll unsquelch:
 
     >>> agent.db.unsquelch('test')
     >>> agent.perform(0)
-    OutputAlerter trigger //test.example.com/test/foo.txt#monitor-status
-    'foo.txt' exists
+    OutputAlerter trigger //test.example.com/test/foo.txt#server badness
 
 JSON
 ====
@@ -251,7 +259,7 @@ checker will return file contents of they're JSON:
     >>> with open('foo.txt', 'w') as f:
     ...     f.write('{"faults": []}')
     >>> agent.perform(0)
-    OutputAlerter resolve //test.example.com/test/foo.txt#monitor-status
+    OutputAlerter resolve //test.example.com/test/foo.txt#server
     >>> print agent.db
     {'test.example.com': []}
 
@@ -303,7 +311,8 @@ If a test takes too long we'll get a timeout fault:
     OutputAlerter resolve //test.example.com/test/foo.txt#json-error
 
     >>> print agent.db
-    {'test.example.com': [{'message': '',
+    {'test.example.com': [{'escalates': False,
+                           'message': '',
                            'name':
                            '//test.example.com/test/foo.txt#monitor-timeout',
                            'severity': 40,
@@ -346,6 +355,52 @@ does, then we'll alert immediately.  We don't retry:
                            'triggered': 'y',
                            'updated': 1418152356.406125}]}
 
+Non-escalating faults
+=====================
+
+Faults can indicate that their severity should never escalate; this is
+used to stop monitoring failures from escalating, since a monitoring
+failure doesn't indicate an application failure.
+
+Faults that include the 'escalating' key with a False value will not
+escalate to critical, nor cause alerts to be triggered:
+
+    >>> with open('foo.txt', 'w') as f:
+    ...     f.write('''{"faults": [
+    ...                {"name": "server",
+    ...                 "severity": "error",
+    ...                 "message": "badness",
+    ...                 "escalates": false}
+    ...             ]}''')
+    >>> agent.perform(0)
+    OutputAlerter resolve //test.example.com/test/foo.txt#OMG
+    >>> print agent.db
+    {'test.example.com': [{u'escalates': False,
+                           u'message': u'badness',
+                           u'name': u'//test.example.com/test/foo.txt#server',
+                           u'severity': 40,
+                           'since': 1418152356.455423,
+                           'updated': 1418152356.455423}]}
+
+Note the message doesn't inclue the "(1 of 4)" annotation we'd expect to
+see for faults that escalate.
+
+After additional iterations, we see that escalation still hasn't happened:
+
+    >>> agent.perform(0)
+    >>> agent.perform(0)
+    >>> agent.perform(0)
+    >>> agent.perform(0)
+
+    >>> print agent.db
+    {'test.example.com': [{u'escalates': False,
+                           u'message': u'badness',
+                           u'name': u'//test.example.com/test/foo.txt#server',
+                           u'severity': 40,
+                           'since': 1418152356.455423,
+                           'updated': 1418152356.455423}]}
+
+
 Checks can use severity names
 =============================
 
@@ -355,7 +410,6 @@ for severities:
     >>> with open('foo.txt', 'w') as f:
     ...     f.write('{"faults": [{"message": "Worry", "severity": "WARNING"}]}')
     >>> agent.perform(0)
-    OutputAlerter resolve //test.example.com/test/foo.txt#OMG
     >>> print agent.db
     {'test.example.com': [{u'message': u'Worry',
                            'name': '//test.example.com/test/foo.txt',
