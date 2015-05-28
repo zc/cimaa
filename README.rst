@@ -202,7 +202,11 @@ Changes
 *******
 
 - Parse metrics from Nagios plugin output by default.  If thresholds are
-  specified and metric parsing is disabled, an error is generated.
+  specified and metric parsing is disabled, an error is generated
+  (https://github.com/zc/cimaa/issues/12).
+
+- Add 'since' field to DynamoDB data store
+  (https://github.com/zc/cimaa/issues/18).
 
 0.5.3 (2015-03-10)
 ==================

@@ -30,7 +30,7 @@ schemas = dict(
                                 'updated',
                                 data_type=boto.dynamodb2.types.NUMBER),
                             ],
-                        includes=['name', 'updated'],
+                        includes=['name', 'since', 'updated'],
                         )
                     ],
                 ),
@@ -39,6 +39,7 @@ schemas = dict(
 class DB:
 
     def __init__(self, config, tables=tuple(schemas)):
+        # {agent: {name: fault_data}}
         self.last_faults = {}
         conn, prefix = connect(config)
         for name in schemas:
@@ -56,7 +57,7 @@ class DB:
             return [_fault_data(item)
                     for item in self.faults.query_2(agent__eq=agent)]
 
-        self.last_faults[agent] = set(fault['name'] for fault in faults)
+        self.last_faults[agent] = {fault['name']: fault for fault in faults}
         return faults
 
     def set_faults(self, agent, faults):
@@ -69,23 +70,30 @@ class DB:
         def write_faults():
             self._set_faults(agent, faults, old_faults)
 
-        self.last_faults[agent] = set(fault['name'] for fault in faults)
+        self.last_faults[agent] = {fault['name']: fault for fault in faults}
 
     def _set_faults(self, agent, faults, old_faults):
+        now = int(time.time())
         with self.faults.batch_write() as batch:
-            #print batch.__class__
             # Heartbeat
             batch.put_item(dict(
                 agent='_',
                 name=agent,
-                updated=int(time.time()),
+                updated=now,
                 ))
 
             for fault in faults:
                 data = fault.copy()
                 data['agent'] = agent
+                name = fault['name']
+                if name in old_faults:
+                    if 'since' not in old_faults[name]:
+                        old_faults[name]['since'] = now
+                    data['since'] = old_faults[name]['since']
+                    del old_faults[name]
+                else:
+                    data['since'] = now
                 batch.put_item(data, overwrite=True)
-                old_faults.discard(data['name'])
             for name in old_faults:
                 batch.delete_item(agent=agent, name=name)
 
@@ -171,7 +179,7 @@ def retry(attempts, doing_what):
     return decorator
 
 
-def _convert_tstamp(data, name):
+def _convert_timestamp(data, name):
     if name in data:
         try:
             data[name] = int(data[name])
@@ -184,7 +192,8 @@ def _fault_data(item):
     # dynamodb doesn't populate keys with empty strings
     if u'message' not in data:
         data[u'message'] = u''
-    _convert_tstamp(data, u"updated")
+    _convert_timestamp(data, u"since")
+    _convert_timestamp(data, u"updated")
     if u'severity' in data:
         # Ints, not Decimals:
         data[u'severity'] = int(data[u'severity'])

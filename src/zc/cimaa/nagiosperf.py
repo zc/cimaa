@@ -37,17 +37,28 @@ r"""Parser for nagios performance data
     >>> ppp("| 'ha ha ha'=3has")
     ('\n', [{'name': "'ha ha ha'", 'units': 'has', 'value': 3.0}])
 
+    >>> ppp("| 'ha ha ha'=-3has")
+    ('\n', [{'name': "'ha ha ha'", 'units': 'has', 'value': -3.0}])
+
+    >>> ppp("| 'ha ha ha'=+3has")
+    ('\n', [{'name': "'ha ha ha'", 'units': 'has', 'value': 3.0}])
+
+    >>> ppp(
+    ... "he he he; | m=2643MB;-5948;+5958;-6000;6000")
+    ('he he he; \n',
+     [{'name': 'm', 'units': 'MB', 'value': 2643.0}])
+
 See: https://nagios-plugins.org/doc/guidelines.html#AEN200
 """
 
 import re
 
 perf_parse = re.compile(
-    r"([^=' \t]+|'[^=']+')"         # label
-    r"="                           # =
-    r"(\d+(\.\d*)?|\.\d+)"         # value
-    r"([^; \t]*)"                      # Units
-    r"(;(\d+(\.\d*)?|\.\d+)){0,4}" # warn, crit, min, max
+    r"([^=' \t]+|'[^=']+')"                   # label
+    r"="                                      # =
+    r"([-+]?\d+(\.\d*)?|[-+]?\.\d+)"          # value
+    r"([^; \t]*)"                             # Units
+    r"(;([-+]?\d+(\.\d*)?|[-+]?\.\d+)){0,4}"  # warn, crit, min, max
     ).findall
 
 def parse_output(text):
