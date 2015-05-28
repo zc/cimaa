@@ -151,22 +151,18 @@ Nagios plugins can include performance data in their output::
    >>> with open('foo.txt', 'w') as f:
    ...     f.write(src)
 
-Normally, performance data is ignored:
+Performance data is parsed by default:
 
     >>> agent.perform(0)
+    2014-12-13T16:14:47.820000 //test.example.com/test/foo.txt#/ 2643.0 MB
+    2014-12-13T16:14:47.820000 //test.example.com/test/foo.txt#/boot 68.0 MB
+    2014-12-13T16:14:47.820000 //test.example.com/test/foo.txt#/home 69357.0 MB
+    2014-12-13T16:14:47.820000 //test.example.com/test/foo.txt#/var/log 818.0 MB
+    2014-12-13T16:14:47.820000 //test.example.com/test/foo.txt#speed 0.0 
+    2014-12-13T16:14:47.820000 //test.example.com/test/foo.txt#loudness 0.0 
+
     >>> print agent.db
-    {'test.example.com': [{'escalates': False,
-                           'message': 'Missing metric',
-                           'name': '//test.example.com/test/foo.txt#speed',
-                           'severity': 40,
-                           'since': 1418487287.82,
-                           'updated': 1418487287.82},
-                          {'escalates': False,
-                           'message': 'Missing metric',
-                           'name': '//test.example.com/test/foo.txt#loudness',
-                           'severity': 40,
-                           'since': 1418487287.82,
-                           'updated': 1418487287.82}]}
+    {'test.example.com': []}
 
     >>> agent.clear()
 
@@ -175,8 +171,7 @@ this is considered a problem with monitoring rather than the application
 being monitored.
 
 If we want parsing of performance data, we need to use the
-``nagios_performance`` option in the check definition:
-::
+``nagios_performance`` option in the check definition::
 
   [foo.txt]
   command = PY filecheck.py foo.txt
@@ -192,8 +187,6 @@ If we want parsing of performance data, we need to use the
     ...     f.write(src.replace('PY', sys.executable))
     >>> agent = zc.cimaa.agent.Agent('agent.cfg')
 
-::
-
     >>> agent.perform(0)
     2014-12-13T16:14:47.820000 //test.example.com/test/foo.txt#/ 2643.0 MB
     2014-12-13T16:14:47.820000 //test.example.com/test/foo.txt#/boot 68.0 MB
@@ -205,6 +198,81 @@ If we want parsing of performance data, we need to use the
     {'test.example.com': []}
 
     >>> agent.clear()
+
+If thresholds are specified and ``nagios_performance`` is set to false,
+a fault is generated when the configuration is loaded::
+
+  [foo.txt]
+  command = PY filecheck.py foo.txt
+  nagios_performance = FALSE
+  thresholds =
+    speed warning > 50 error > 70 critical > 110 clear < 60
+    loudness warning > 11 error > 20
+    free ? warning <= 20 error <= 10 critical <= 3
+
+.. -> src
+
+    >>> with open(os.path.join('agent.d', 'test.cfg'), 'w') as f:
+    ...     f.write(src.replace('PY', sys.executable))
+    >>> agent = zc.cimaa.agent.Agent('agent.cfg')
+    >>> agent.perform(0)
+    OutputAlerter trigger //test.example.com/test/
+      error loading check agent.d/test.cfg [foo.txt]:
+      nagios_performance can't be false when thresholds are specified
+    >>> print agent.db
+    {'test.example.com':
+     [{'message': "error loading check agent.d/test.cfg [foo.txt]:
+          nagios_performance can't be false when thresholds are specified",
+       'name': '//test.example.com/test/',
+       'severity': 50,
+       'since': 1418487287.82,
+       'triggered': 'y',
+       'updated': 1418487287.82}]}
+
+Without thresholds, disable metrics parsing is allowed, and can be used
+to avoid problems with output from some Nagios-style plugins::
+
+  [foo.txt]
+  command = PY filecheck.py foo.txt
+  nagios_performance = FALSE
+
+.. -> src
+
+    >>> with open(os.path.join('agent.d', 'test.cfg'), 'w') as f:
+    ...     f.write(src.replace('PY', sys.executable))
+    >>> agent = zc.cimaa.agent.Agent('agent.cfg')
+
+    >>> agent.perform(0)
+    >>> print agent.db
+    {'test.example.com': []}
+
+    >>> agent.clear()
+
+Specifying an insane value for ``nagios_performance`` will also generate
+a fault::
+
+  [foo.txt]
+  command = PY filecheck.py foo.txt
+  nagios_performance = yada yada
+
+.. -> src
+
+    >>> with open(os.path.join('agent.d', 'test.cfg'), 'w') as f:
+    ...     f.write(src.replace('PY', sys.executable))
+    >>> agent = zc.cimaa.agent.Agent('agent.cfg')
+    >>> agent.perform(0)
+    OutputAlerter trigger //test.example.com/test/
+      error loading check agent.d/test.cfg [foo.txt]:
+      bad value for nagios_performance: 'yada yada'
+    >>> print agent.db
+    {'test.example.com':
+     [{'message': "error loading check agent.d/test.cfg [foo.txt]:
+          bad value for nagios_performance: 'yada yada'",
+       'name': '//test.example.com/test/',
+       'severity': 50,
+       'since': 1418487287.82,
+       'triggered': 'y',
+       'updated': 1418487287.82}]}
 
 Logging metrics handler
 ========================
