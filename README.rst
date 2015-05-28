@@ -201,6 +201,9 @@ To do
 Changes
 *******
 
+- Add 'since' field to DynamoDB data store
+  (https://github.com/zc/cimaa/issues/18).
+
 0.5.3 (2015-03-10)
 ==================
 
