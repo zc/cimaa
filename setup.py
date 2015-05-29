@@ -44,7 +44,7 @@ setup(
     author = 'Jim Fulton',
     author_email = 'jim@zope.com',
     license = 'ZPL 2.1',
-
+    url = 'https://github.com/zc/cimaa',
     name = name, version = version,
     long_description = long_description,
     description = long_description.strip().split('\n')[1],
