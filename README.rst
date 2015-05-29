@@ -201,6 +201,9 @@ To do
 Changes
 *******
 
+0.6.0 (2015-05-29)
+==================
+
 - Support non-escalating faults, and use them for failures in monitors.
   These should not be used when reporting application failures
   (https://github.com/zc/cimaa/issues/15).
